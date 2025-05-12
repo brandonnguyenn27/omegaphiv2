@@ -1,4 +1,6 @@
-import type React from "react";
+"use client";
+
+import * as React from "react";
 import { AppSidebar } from "../../components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -14,12 +16,24 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { usePathname } from "next/navigation";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const segments = pathname.split("/").filter(Boolean);
+
+  // Format the segment for display (capitalize, remove hyphens)
+  const formatSegment = (segment: string) => {
+    return segment
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -30,12 +44,24 @@ export default function DashboardLayout({
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#">Dashboard</BreadcrumbLink>
+                <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
               </BreadcrumbItem>
-              <BreadcrumbSeparator className="hidden md:block" />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Overview</BreadcrumbPage>
-              </BreadcrumbItem>
+              {segments.map((segment, index) => (
+                <React.Fragment key={segment}>
+                  <BreadcrumbSeparator className="hidden md:block" />
+                  <BreadcrumbItem>
+                    {index === segments.length - 1 ? (
+                      <BreadcrumbPage>{formatSegment(segment)}</BreadcrumbPage>
+                    ) : (
+                      <BreadcrumbLink
+                        href={`/${segments.slice(0, index + 1).join("/")}`}
+                      >
+                        {formatSegment(segment)}
+                      </BreadcrumbLink>
+                    )}
+                  </BreadcrumbItem>
+                </React.Fragment>
+              ))}
             </BreadcrumbList>
           </Breadcrumb>
         </header>

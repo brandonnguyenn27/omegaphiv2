@@ -13,6 +13,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import Link from "next/link";
 
 const data = {
   navMain: [
@@ -22,7 +23,7 @@ const data = {
       items: [
         {
           title: "Overview",
-          url: "#",
+          url: "/overview",
           isActive: true,
         },
         {
@@ -37,11 +38,11 @@ const data = {
     },
     {
       title: "Admin",
-      url: "#",
+      url: "/",
       items: [
         {
           title: "Users",
-          url: "#",
+          url: "/users",
         },
         {
           title: "Settings",
@@ -67,7 +68,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <GalleryVerticalEnd className="size-4" />
               </div>
               <div className="flex flex-col gap-0.5 leading-none">
-                <span className="font-semibold">Omega Phi</span>
+                <Link href="/dashboard" className="font-semibold">
+                  Omega Phi
+                </Link>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
