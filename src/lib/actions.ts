@@ -6,9 +6,9 @@ import { cookies } from "next/headers";
 export async function signOut() {
   const cookieStore = await cookies();
   await auth.api.signOut({
-    headers: {
+    headers: new Headers({
       cookie: cookieStore.toString(),
-    },
+    }),
   });
 
   return { success: true };

@@ -1,5 +1,7 @@
 import type * as React from "react";
-import { GalleryVerticalEnd } from "lucide-react";
+import { GalleryVerticalEnd, LogOut } from "lucide-react";
+import { signOut } from "@/lib/actions";
+import { useRouter } from "next/navigation";
 
 import {
   Sidebar,
@@ -12,6 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 
@@ -26,14 +29,6 @@ const data = {
           url: "/overview",
           isActive: true,
         },
-        {
-          title: "Analytics",
-          url: "#",
-        },
-        {
-          title: "Reports",
-          url: "#",
-        },
       ],
     },
     {
@@ -43,14 +38,7 @@ const data = {
         {
           title: "Users",
           url: "/users",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
-        {
-          title: "Permissions",
-          url: "#",
+          isActive: false,
         },
       ],
     },
@@ -58,6 +46,13 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push("/login");
+  };
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -95,6 +90,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroup>
         ))}
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={handleSignOut}
+              className="text-white bg-red-600 hover:bg-red-700 cursor-pointer"
+            >
+              <LogOut className="size-4" />
+              Sign Out
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );
