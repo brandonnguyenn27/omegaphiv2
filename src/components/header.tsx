@@ -4,14 +4,12 @@
 
 import { Button } from "@/components/ui/button"; // Adjust path if necessary
 import { signOut } from "@/lib/actions";
-import { useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 
 export function Header() {
-  const router = useRouter();
-
   const handleSignOut = async () => {
     await signOut();
-    router.push("/login");
+    redirect("/login");
   };
 
   return (
