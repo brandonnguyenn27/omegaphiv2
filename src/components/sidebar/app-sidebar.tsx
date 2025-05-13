@@ -1,7 +1,8 @@
 import type * as React from "react";
 import { GalleryVerticalEnd, LogOut } from "lucide-react";
-import { signOut } from "@/lib/actions";
-import { useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 import {
   Sidebar,
@@ -17,6 +18,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
+import { NavUser } from "./nav-user";
 
 const data = {
   navMain: [
@@ -45,12 +47,21 @@ const data = {
   ],
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const router = useRouter();
+export async function AppSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-  const handleSignOut = async () => {
-    await signOut();
-    router.push("/login");
+  if (!session) {
+    redirect("/login");
+  }
+
+  const user = {
+    name: session.user.name as string,
+    email: session.user.email as string,
+    avatar: session.user.image as string,
   };
 
   return (
@@ -90,18 +101,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={handleSignOut}
-              className="text-white bg-red-600 hover:bg-red-700 cursor-pointer"
-            >
-              <LogOut className="size-4" />
-              Sign Out
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+      <SidebarFooter className="mb-4">
+        <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
