@@ -32,7 +32,7 @@ export function DashboardHeader() {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem className="hidden md:block">
-            <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+            <BreadcrumbLink href="/">Omega Phi</BreadcrumbLink>
           </BreadcrumbItem>
           {segments.map((segment, index) => (
             <React.Fragment key={segment}>
