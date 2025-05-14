@@ -12,7 +12,7 @@ export default async function Dashboard() {
   const events = await getEvents();
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container">
       <div className="w-1/2 h-[50vh]">
         <Card className="h-full flex flex-col">
           <CardHeader className="flex-none">

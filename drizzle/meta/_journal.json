@@ -57,6 +57,13 @@
       "when": 1747175533041,
       "tag": "0007_dark_nova",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1747256812513,
+      "tag": "0008_melted_professor_monster",
+      "breakpoints": true
     }
   ]
 }
