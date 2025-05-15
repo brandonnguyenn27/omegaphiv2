@@ -7,6 +7,9 @@ import { userAvailabilities } from "@/db/schema";
 import { checkSession } from "@/lib/auth-server";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
+import { InferSelectModel } from "drizzle-orm";
+
+type UserAvailabilities = InferSelectModel<typeof userAvailabilities>;
 
 export const insertUserAvailabilitySchema = z
   .object({
@@ -45,7 +48,7 @@ export async function getEvents() {
   }
 }
 
-export async function getAvailability() {
+export async function getAvailability(): Promise<UserAvailabilities[]> {
   const session = await checkSession();
   try {
     const userId = session.user.id;
