@@ -19,7 +19,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "../ui/button";
-import { signOut } from "@/lib/actions";
+import { signOut } from "@/app/(auth)/login/actions";
 
 export function NavUser({
   user,

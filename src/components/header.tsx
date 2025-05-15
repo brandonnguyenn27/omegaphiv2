@@ -3,7 +3,7 @@
 "use client"; // This component needs client-side interactivity for the button
 
 import { Button } from "@/components/ui/button"; // Adjust path if necessary
-import { signOut } from "@/lib/actions";
+import { signOut } from "@/app/(auth)/login/actions";
 import { redirect } from "next/navigation";
 
 export function Header() {
