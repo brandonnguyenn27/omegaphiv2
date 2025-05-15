@@ -1,20 +1,13 @@
 "use server";
 import { db } from "@/index";
 import { events } from "@/db/schema";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+
 import { eq } from "drizzle-orm";
 import { userAvailabilities } from "@/db/schema";
+import { checkSession } from "@/lib/auth-server";
 
 export async function getEvents() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    console.error("Session not found, authentication error");
-    throw new Error("Unauthorized");
-  }
+  checkSession();
 
   try {
     const allEvents = await db.select().from(events).orderBy(events.date);
@@ -26,13 +19,7 @@ export async function getEvents() {
 }
 
 export async function getAvailability() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-  if (!session) {
-    console.error("Session not found, authentication error");
-    throw new Error("Unauthorized");
-  }
+  const session = await checkSession();
   try {
     const userId = session.user.id;
     const userAvailability = await db
