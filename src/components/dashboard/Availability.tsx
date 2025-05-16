@@ -105,7 +105,7 @@ function AvailabilityCard({
           <Button
             variant="destructive"
             size="icon"
-            className=" cursor-pointer mr-2"
+            className="cursor-pointer mr-2"
             onClick={handleDelete}
             disabled={isDeleting}
           >
