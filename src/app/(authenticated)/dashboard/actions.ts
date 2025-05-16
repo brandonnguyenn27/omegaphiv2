@@ -8,7 +8,8 @@ import { checkSession } from "@/lib/auth-server";
 import { v4 as uuidv4 } from "uuid";
 import { InferSelectModel } from "drizzle-orm";
 import { insertUserAvailabilitySchema } from "@/lib/zod/schema";
-
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 type UserAvailabilities = InferSelectModel<typeof userAvailabilities>;
 
 type AvailabilityFormData = {
@@ -109,6 +110,7 @@ export async function addAvailability(
     });
 
     console.log("Availability added successfully for user:", userId);
+    revalidatePath("/dashboard");
 
     return {
       success: true,

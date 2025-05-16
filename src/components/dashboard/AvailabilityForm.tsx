@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 
 import { addAvailability } from "@/app/(authenticated)/dashboard/actions";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,11 +14,24 @@ const initialState: ActionResponse = {
   message: "",
 };
 
-export default function AvailabilityForm() {
+interface AvailabilityFormProps {
+  onSubmissionSuccess: () => void;
+}
+
+export default function AvailabilityForm({
+  onSubmissionSuccess,
+}: AvailabilityFormProps) {
   const [state, action, isPending] = useActionState(
     addAvailability,
     initialState
   );
+
+  useEffect(() => {
+    if (state.success) {
+      onSubmissionSuccess();
+    }
+  }, [state, onSubmissionSuccess]);
+
   return (
     <Card>
       <CardContent>
@@ -28,6 +41,7 @@ export default function AvailabilityForm() {
               <Input
                 name="date"
                 type="date"
+                defaultValue={state?.values?.date || ""}
                 required
                 className={state?.errors?.date ? "border-red-500" : ""}
               />
@@ -41,7 +55,7 @@ export default function AvailabilityForm() {
               <Input
                 name="startTime"
                 type="time"
-                value={state?.values?.startTime}
+                defaultValue={state?.values?.startTime || ""}
                 required
                 className={state?.errors?.startTime ? "border-red-500" : ""}
               />
@@ -55,6 +69,7 @@ export default function AvailabilityForm() {
               <Input
                 name="endTime"
                 type="time"
+                defaultValue={state?.values?.endTime || ""}
                 required
                 className={state?.errors?.endTime ? "border-red-500" : ""}
               />
@@ -64,6 +79,14 @@ export default function AvailabilityForm() {
                 </p>
               )}
             </div>
+
+            {state.success && (
+              <p className="text-sm text-green-500">{state.message}</p>
+            )}
+            {state.success === false && state.message && (
+              <p className="text-sm text-red-500">{state.message}</p>
+            )}
+
             <Button
               type="submit"
               className="w-full cursor-pointer"

@@ -1,6 +1,7 @@
 import { getEvents, getAvailability } from "./actions";
 import Events from "@/components/dashboard/Events";
 import AvailabilityComponent from "@/components/dashboard/Availability";
+import AvailabilityDialog from "@/components/dashboard/AvailabilityDialog";
 
 export default async function Dashboard() {
   const events = await getEvents();

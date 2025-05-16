@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -5,21 +7,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { format } from "date-fns";
 import { InferSelectModel } from "drizzle-orm";
 import { userAvailabilities } from "@/db/schema";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { addAvailability } from "@/app/(authenticated)/dashboard/actions";
-import AvailabilityForm from "./AvailabilityForm";
+import AvailabilityDialog from "./AvailabilityDialog";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { useState } from "react";
 
 type UserAvailabilities = InferSelectModel<typeof userAvailabilities>;
 
@@ -28,6 +22,16 @@ export default function AvailabilityComponent({
 }: {
   availabilities: UserAvailabilities[];
 }) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleOpenDialog = () => {
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+  };
+
   return (
     <div className="h-[50vh]">
       <Card className="h-full flex flex-col">
@@ -37,7 +41,9 @@ export default function AvailabilityComponent({
               <CardTitle>Availability</CardTitle>
               <CardDescription>Your interview availability</CardDescription>
             </div>
-            <AvailabilityDialog />
+            <Button variant="outline" size="icon" onClick={handleOpenDialog}>
+              <Plus className="h-4 w-4" />
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="flex-1 overflow-y-auto space-y-2">
@@ -57,6 +63,8 @@ export default function AvailabilityComponent({
           )}
         </CardContent>
       </Card>
+
+      <AvailabilityDialog isOpen={isDialogOpen} onClose={handleCloseDialog} />
     </div>
   );
 }
@@ -84,26 +92,5 @@ function AvailabilityCard({
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function AvailabilityDialog() {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button size="icon" variant="outline" className="cursor-pointer">
-          <Plus className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add Availability</DialogTitle>
-          <DialogDescription>
-            Add your availability for interviews.
-          </DialogDescription>
-        </DialogHeader>
-        <AvailabilityForm />
-      </DialogContent>
-    </Dialog>
   );
 }
