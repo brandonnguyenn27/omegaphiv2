@@ -70,6 +70,26 @@ export async function getInterviewDates(): Promise<InterviewDates[]> {
   }
 }
 
+export async function deleteAvailability(
+  availabilityId: string,
+  userId: string
+) {
+  const session = await checkSession();
+  if (session.user.id !== userId) {
+    throw new Error("Unauthorized action");
+  }
+  try {
+    await db
+      .delete(userAvailabilities)
+      .where(eq(userAvailabilities.id, availabilityId));
+    console.log("Availability deleted successfully, ID:", availabilityId);
+    revalidatePath("/dashboard");
+  } catch (error) {
+    console.error("Error deleting availability:", error);
+    throw new Error("Failed to delete availability");
+  }
+}
+
 export async function addAvailability(
   prevState: ActionResponse | null,
   formData: FormData

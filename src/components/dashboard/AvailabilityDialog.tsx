@@ -37,9 +37,6 @@ export default function AvailabilityDialog({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Availability</DialogTitle>
-            <DialogDescription>
-              Add your availability for interviews.
-            </DialogDescription>
           </DialogHeader>
           <AvailabilityForm onSubmissionSuccess={handleFormSubmissionSuccess} />
         </DialogContent>

@@ -14,6 +14,8 @@ import AvailabilityDialog from "./AvailabilityDialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
+import { deleteAvailability } from "@/app/(authenticated)/dashboard/actions";
+import { Loader2, Trash } from "lucide-react";
 
 type UserAvailabilities = InferSelectModel<typeof userAvailabilities>;
 
@@ -52,7 +54,7 @@ export default function AvailabilityComponent({
               You have no availability set. Click the plus icon to add one.
             </div>
           ) : (
-            <div>
+            <div className="flex flex-col gap-2">
               {availabilities.map((availability) => (
                 <AvailabilityCard
                   key={availability.id}
@@ -74,9 +76,20 @@ function AvailabilityCard({
 }: {
   availability: UserAvailabilities;
 }) {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteAvailability(availability.id, availability.userId);
+    } catch (error) {
+      console.error("Failed to delete availability:", error);
+      setIsDeleting(false);
+    }
+  };
   return (
     <Card className="bg-muted/50 hover:bg-muted/70 transition-colors">
-      <CardContent className="p-2">
+      <CardContent className="p-2 pl-4">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
@@ -89,6 +102,19 @@ function AvailabilityCard({
               </CardDescription>
             </div>
           </div>
+          <Button
+            variant="destructive"
+            size="icon"
+            className=" cursor-pointer mr-2"
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash />
+            )}
+          </Button>
         </div>
       </CardContent>
     </Card>

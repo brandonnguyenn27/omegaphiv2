@@ -3,7 +3,13 @@
 import { useActionState, useEffect } from "react";
 
 import { addAvailability } from "@/app/(authenticated)/dashboard/actions";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,7 +17,11 @@ import type { ActionResponse } from "@/app/(authenticated)/dashboard/actions";
 import { useQuery } from "@tanstack/react-query";
 import { getInterviewDates } from "@/app/(authenticated)/dashboard/actions";
 import SkeletonFormCard from "../loading/skeleton";
-import { formatDateForDisplay, formatDateForValue } from "@/utils/helpers";
+import {
+  formatDateForDisplay,
+  formatDateForValue,
+  formatTimeForDisplay,
+} from "@/utils/helpers";
 import {
   Select,
   SelectContent,
@@ -38,8 +48,11 @@ export default function AvailabilityForm({
   );
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
     if (state.success) {
-      onSubmissionSuccess();
+      timeoutId = setTimeout(() => {
+        onSubmissionSuccess();
+      }, 500);
     }
   }, [state, onSubmissionSuccess]);
 
@@ -86,9 +99,25 @@ export default function AvailabilityForm({
 
   return (
     <Card>
+      <CardHeader>
+        <CardTitle>
+          <div className="text-sm font-medium">Available Interview Slots:</div>
+        </CardTitle>
+        <CardDescription>
+          <ul className="space-y-1 text-sm">
+            {interviewDates.map((date) => (
+              <li key={date.id}>
+                {formatDateForDisplay(date.date)} @{" "}
+                {formatTimeForDisplay(date.startTime)} -{" "}
+                {formatTimeForDisplay(date.endTime)}
+              </li>
+            ))}
+          </ul>
+        </CardDescription>
+      </CardHeader>
       <CardContent>
         <form action={action}>
-          <div className="m-2 gap-2 flex flex-col">
+          <div className=" gap-4 flex flex-col">
             <div>
               <input
                 type="hidden"
