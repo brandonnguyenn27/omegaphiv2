@@ -1,8 +1,5 @@
 import type * as React from "react";
-import { GalleryVerticalEnd, LogOut } from "lucide-react";
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { GalleryVerticalEnd } from "lucide-react";
 
 import {
   Sidebar,
@@ -47,23 +44,15 @@ const data = {
   ],
 };
 
-export async function AppSidebar({
-  ...props
-}: React.ComponentProps<typeof Sidebar>) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    redirect("/login");
-  }
-
-  const user = {
-    name: session.user.name as string,
-    email: session.user.email as string,
-    avatar: session.user.image as string,
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  user: {
+    name: string;
+    email: string;
+    avatar?: string;
   };
+}
 
+export function AppSidebar({ user, ...props }: AppSidebarProps) {
   return (
     <Sidebar {...props}>
       <SidebarHeader>

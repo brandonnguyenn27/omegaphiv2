@@ -18,7 +18,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Button } from "../ui/button";
 import { signOut } from "@/app/(auth)/login/actions";
 
 export function NavUser({
@@ -45,7 +44,8 @@ export function NavUser({
                 <AvatarImage
                   src={user.avatar || "/placeholder.svg"}
                   alt={user.name}
-                />
+                ></AvatarImage>
+
                 <AvatarFallback className="rounded-lg">
                   {user.name.charAt(0)}
                   {user.name.split(" ")[1]?.charAt(0)}
