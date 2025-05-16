@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import type { ActionResponse } from "@/app/(authenticated)/dashboard/actions";
 import { useQuery } from "@tanstack/react-query";
 import { getInterviewDates } from "@/app/(authenticated)/dashboard/actions";
-import SkeletonFormCard from "../loading/skeleton";
+import SkeletonFormCard from "../loading/FormSkeleton";
 import {
   formatDateForDisplay,
   formatDateForValue,

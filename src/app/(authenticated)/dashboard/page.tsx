@@ -1,4 +1,4 @@
-import { getEvents, getAvailability, getInterviewDates } from "./actions";
+import { getEvents, getAvailability } from "./actions";
 import Events from "@/components/dashboard/Events";
 import AvailabilityComponent from "@/components/dashboard/Availability";
 
