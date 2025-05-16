@@ -3,14 +3,14 @@ import { db } from "@/index";
 import { events } from "@/db/schema";
 
 import { eq } from "drizzle-orm";
-import { userAvailabilities } from "@/db/schema";
+import { userAvailabilities, interviewDates } from "@/db/schema";
 import { checkSession } from "@/lib/auth-server";
 import { v4 as uuidv4 } from "uuid";
 import { InferSelectModel } from "drizzle-orm";
 import { insertUserAvailabilitySchema } from "@/lib/zod/schema";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 type UserAvailabilities = InferSelectModel<typeof userAvailabilities>;
+type InterviewDates = InferSelectModel<typeof interviewDates>;
 
 type AvailabilityFormData = {
   date: string;
@@ -55,6 +55,21 @@ export async function getAvailability(): Promise<UserAvailabilities[]> {
   }
 }
 
+export async function getInterviewDates(): Promise<InterviewDates[]> {
+  await checkSession();
+  try {
+    console.log("Fetching interview dates...");
+    const interviewDatesData = await db
+      .select()
+      .from(interviewDates)
+      .orderBy(interviewDates.date);
+    return interviewDatesData;
+  } catch (error) {
+    console.error("Error fetching interview dates:", error);
+    return [];
+  }
+}
+
 export async function addAvailability(
   prevState: ActionResponse | null,
   formData: FormData
@@ -65,7 +80,7 @@ export async function addAvailability(
   const endTimeString = formData.get("endTime") as string;
 
   const dataToValidate = {
-    date: dateString ? new Date(dateString) : undefined, //TO-DO: fix this
+    date: dateString ? new Date(dateString) : undefined,
     startTime: startTimeString
       ? new Date(`1970-01-01T${startTimeString}`)
       : undefined,
@@ -94,7 +109,6 @@ export async function addAvailability(
     };
   }
 
-  const { date, startTime, endTime } = parsedData.data;
   const userId = session.user.id;
   const validatedData = parsedData.data;
 

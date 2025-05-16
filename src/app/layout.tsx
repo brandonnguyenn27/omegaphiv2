@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Providers from "./providers";
 
 import { Merriweather } from "next/font/google";
 
@@ -21,7 +22,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={merriweather.className}>{children}</body>
+      <body className={merriweather.className}>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
