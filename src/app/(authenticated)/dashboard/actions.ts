@@ -5,36 +5,26 @@ import { events } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { userAvailabilities } from "@/db/schema";
 import { checkSession } from "@/lib/auth-server";
-import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { InferSelectModel } from "drizzle-orm";
+import { insertUserAvailabilitySchema } from "@/lib/zod/schema";
 
 type UserAvailabilities = InferSelectModel<typeof userAvailabilities>;
 
-export const insertUserAvailabilitySchema = z
-  .object({
-    userId: z.string({
-      required_error: "User ID is required",
-      invalid_type_error: "User ID must be a string",
-    }),
+type AvailabilityFormData = {
+  date: Date;
+  startTime: Date;
+  endTime: Date;
+};
 
-    date: z.date({
-      required_error: "Date is required",
-      invalid_type_error: "Invalid date format",
-    }),
-    startTime: z.date({
-      required_error: "Start time is required",
-      invalid_type_error: "Invalid start time format",
-    }),
-    endTime: z.date({
-      required_error: "End time is required",
-      invalid_type_error: "Invalid end time format",
-    }),
-  })
-  .refine((data) => data.endTime > data.startTime, {
-    message: "End time must be after start time",
-    path: ["endTime"],
-  });
+export interface ActionResponse {
+  success: boolean;
+  message: string;
+  errors?: {
+    [K in keyof AvailabilityFormData]?: string[];
+  };
+  values?: AvailabilityFormData;
+}
 
 export async function getEvents() {
   await checkSession();
@@ -64,17 +54,19 @@ export async function getAvailability(): Promise<UserAvailabilities[]> {
   }
 }
 
-export async function addAvailability(formData: FormData) {
+export async function addAvailability(
+  prevState: ActionResponse | null,
+  formData: FormData
+): Promise<ActionResponse> {
   const session = await checkSession();
   const dateString = formData.get("date") as string;
   const startTimeString = formData.get("startTime") as string;
   const endTimeString = formData.get("endTime") as string;
 
-  const dataToValidate = {
-    userId: session.user.id,
-    date: dateString ? new Date(dateString) : undefined,
-    startTime: startTimeString ? new Date(startTimeString) : undefined,
-    endTime: endTimeString ? new Date(endTimeString) : undefined,
+  const dataToValidate: AvailabilityFormData = {
+    date: dateString ? new Date(dateString) : new Date(), //TO-DO: fix this
+    startTime: startTimeString ? new Date(startTimeString) : new Date(),
+    endTime: endTimeString ? new Date(endTimeString) : new Date(),
   };
 
   const parsedData = insertUserAvailabilitySchema.safeParse(dataToValidate);
@@ -86,6 +78,9 @@ export async function addAvailability(formData: FormData) {
       errors: {
         ...formFieldErrors,
       },
+      success: false,
+      message: "Form failed. Please check your input.",
+      values: dataToValidate,
     };
   }
 
@@ -94,7 +89,7 @@ export async function addAvailability(formData: FormData) {
   try {
     await db.insert(userAvailabilities).values({
       id: uuidv4(),
-      userId,
+      userId: session.user.id,
       date: date,
       startTime: startTime,
       endTime: endTime,
@@ -111,8 +106,12 @@ export async function addAvailability(formData: FormData) {
   } catch (error) {
     console.error("Error adding availability:", error);
     return {
-      errors: {
-        form: "An error occurred while saving your availability. Please try again.",
+      success: false,
+      message: "Failed to add availability. Please try again.",
+      values: {
+        date: date,
+        startTime: startTime,
+        endTime: endTime,
       },
     };
   }

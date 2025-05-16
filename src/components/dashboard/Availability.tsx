@@ -10,6 +10,16 @@ import { Plus } from "lucide-react";
 import { format } from "date-fns";
 import { InferSelectModel } from "drizzle-orm";
 import { userAvailabilities } from "@/db/schema";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { addAvailability } from "@/app/(authenticated)/dashboard/actions";
+import AvailabilityForm from "./AvailabilityForm";
 
 type UserAvailabilities = InferSelectModel<typeof userAvailabilities>;
 
@@ -27,13 +37,7 @@ export default function AvailabilityComponent({
               <CardTitle>Availability</CardTitle>
               <CardDescription>Your interview availability</CardDescription>
             </div>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="cursor-pointer border-1 border-gray-400 border-opacity-50"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+            <AvailabilityDialog />
           </div>
         </CardHeader>
         <CardContent className="flex-1 overflow-y-auto space-y-2">
@@ -80,5 +84,26 @@ function AvailabilityCard({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function AvailabilityDialog() {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button size="icon" variant="outline" className="cursor-pointer">
+          <Plus className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Availability</DialogTitle>
+          <DialogDescription>
+            Add your availability for interviews.
+          </DialogDescription>
+        </DialogHeader>
+        <AvailabilityForm />
+      </DialogContent>
+    </Dialog>
   );
 }
