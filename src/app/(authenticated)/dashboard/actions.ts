@@ -12,9 +12,9 @@ import { insertUserAvailabilitySchema } from "@/lib/zod/schema";
 type UserAvailabilities = InferSelectModel<typeof userAvailabilities>;
 
 type AvailabilityFormData = {
-  date: Date;
-  startTime: Date;
-  endTime: Date;
+  date: string;
+  startTime: string;
+  endTime: string;
 };
 
 export interface ActionResponse {
@@ -63,13 +63,18 @@ export async function addAvailability(
   const startTimeString = formData.get("startTime") as string;
   const endTimeString = formData.get("endTime") as string;
 
-  const dataToValidate: AvailabilityFormData = {
-    date: dateString ? new Date(dateString) : new Date(), //TO-DO: fix this
-    startTime: startTimeString ? new Date(startTimeString) : new Date(),
-    endTime: endTimeString ? new Date(endTimeString) : new Date(),
+  const dataToValidate = {
+    date: dateString ? new Date(dateString) : undefined, //TO-DO: fix this
+    startTime: startTimeString
+      ? new Date(`1970-01-01T${startTimeString}`)
+      : undefined,
+    endTime: endTimeString
+      ? new Date(`1970-01-01T${endTimeString}`)
+      : undefined,
   };
 
   const parsedData = insertUserAvailabilitySchema.safeParse(dataToValidate);
+  console.log("Parsed data:", parsedData);
 
   if (!parsedData.success) {
     const formFieldErrors = parsedData.error.flatten().fieldErrors;
@@ -80,19 +85,25 @@ export async function addAvailability(
       },
       success: false,
       message: "Form failed. Please check your input.",
-      values: dataToValidate,
+      values: {
+        date: dateString,
+        startTime: startTimeString,
+        endTime: endTimeString,
+      },
     };
   }
 
-  const { date, startTime, endTime, userId } = parsedData.data;
+  const { date, startTime, endTime } = parsedData.data;
+  const userId = session.user.id;
+  const validatedData = parsedData.data;
 
   try {
     await db.insert(userAvailabilities).values({
       id: uuidv4(),
-      userId: session.user.id,
-      date: date,
-      startTime: startTime,
-      endTime: endTime,
+      userId: userId,
+      date: validatedData.date,
+      startTime: validatedData.startTime,
+      endTime: validatedData.endTime,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -109,9 +120,9 @@ export async function addAvailability(
       success: false,
       message: "Failed to add availability. Please try again.",
       values: {
-        date: date,
-        startTime: startTime,
-        endTime: endTime,
+        date: dateString,
+        startTime: startTimeString,
+        endTime: endTimeString,
       },
     };
   }
