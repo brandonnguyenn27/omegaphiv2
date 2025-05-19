@@ -104,7 +104,7 @@
 
   /* --- Aurora Component Variables (Aliased from Tailwind's default vars) --- */
   --white: var(--tw-color-white, white);
-  --black: var(--tw-color-black, black);
+
   --transparent: transparent;
 
   --blue-500: #001f3f; /* Dark navy */
