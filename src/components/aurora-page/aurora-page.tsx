@@ -22,7 +22,7 @@ export function AuroraComponent() {
         <div className="min-h-screen flex items-start justify-center pt-[35vh]">
           <div className="flex flex-col items-center gap-6 font-semibold text-5xl">
             <span>Welcome to Omega Phi</span>
-            <Button asChild className="">
+            <Button asChild className="[cursor:pointer]" variant="default">
               <Link href="/dashboard">Go to dashboard</Link>
             </Button>
           </div>

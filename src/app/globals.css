@@ -43,6 +43,31 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/*
+  Define keyframes globally, outside of @theme,
+  as the parser seems to have issues with it nested.
+*/
+/* Define Aurora keyframes globally */
+@keyframes aurora-animation {
+  0% {
+    background-position: 50% 50%, 50% 50%;
+  }
+  100% {
+    background-position: 350% 50%, 350% 50%;
+  }
+}
+
+/* Create a direct CSS class for the Aurora animation 
+   that the component can use without Tailwind's utilities */
+.animate-aurora {
+  animation: aurora-animation 60s linear infinite;
+}
+
+/* Class for when 'after:animate-aurora' is used in the component */
+.after\:animate-aurora::after {
+  animation: aurora-animation 60s linear infinite;
+}
+
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -76,6 +101,18 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* --- Aurora Component Variables (Aliased from Tailwind's default vars) --- */
+  --white: var(--tw-color-white, white);
+  --black: var(--tw-color-black, black);
+  --transparent: transparent;
+
+  --blue-500: #001f3f; /* Dark navy */
+  --indigo-300: #003366; /* Medium navy */
+  --blue-300: #004080; /* Navy blue */
+  --violet-200: #0059b3; /* Lighter navy with hint of brightness */
+  --blue-400: #002855; /* Another navy shade */
+  /* --- End Aurora Component Variables --- */
 }
 
 .dark {

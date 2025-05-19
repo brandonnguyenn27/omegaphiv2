@@ -19,7 +19,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { signOut } from "@/app/(auth)/login/actions";
-import Image from "next/image";
 
 export function NavUser({
   user,
@@ -42,17 +41,10 @@ export function NavUser({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                {user.avatar ? (
-                  <AvatarImage asChild src={user.avatar}>
-                    <Image
-                      src={user.avatar}
-                      alt={user.name}
-                      width={32}
-                      height={32}
-                      className="rounded-lg"
-                    />
-                  </AvatarImage>
-                ) : null}
+                <AvatarImage
+                  src={user.avatar || "/placeholder.svg"}
+                  alt={user.name}
+                />
 
                 <AvatarFallback className="rounded-lg">
                   {user.name.charAt(0)}
