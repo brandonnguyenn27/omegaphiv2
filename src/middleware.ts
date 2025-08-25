@@ -16,11 +16,19 @@ export async function middleware(request: NextRequest) {
     (path) => pathname === path || pathname.startsWith(`${path}/`)
   );
 
-  if (sessionCookie || isPublicPath) {
+  // If no session cookie and not a public path, redirect to login
+  if (!sessionCookie && !isPublicPath) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  // For now, we'll let the server-side components handle whitelist checking
+  // The middleware will just ensure there's a valid session cookie
+  if (sessionCookie && !isPublicPath) {
+    // Session exists, allow access - whitelist checking will be done server-side
     return NextResponse.next();
   }
 
-  return NextResponse.redirect(new URL("/login", request.url));
+  return NextResponse.next();
 }
 
 export const config = {

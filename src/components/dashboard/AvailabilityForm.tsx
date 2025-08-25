@@ -48,9 +48,8 @@ export default function AvailabilityForm({
   );
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
     if (state.success) {
-      timeoutId = setTimeout(() => {
+      setTimeout(() => {
         onSubmissionSuccess();
       }, 500);
     }

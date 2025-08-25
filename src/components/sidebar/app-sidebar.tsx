@@ -21,11 +21,11 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard",
       items: [
         {
           title: "Overview",
-          url: "/overview",
+          url: "/dashboard",
           isActive: true,
         },
       ],

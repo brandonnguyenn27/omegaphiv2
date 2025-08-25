@@ -3,7 +3,7 @@ import { AppSidebar } from "../../components/sidebar/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardHeader } from "@/components/sidebar/dashboard-header";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { auth, isEmailWhitelisted } from "@/lib/auth";
 import { headers } from "next/headers";
 
 interface UserProfile {
@@ -23,6 +23,21 @@ export default async function DashboardLayout({
 
   if (!session?.user) {
     redirect("/login"); // Redirect if no session or user
+  }
+
+  // Check if user is still whitelisted
+  if (session.user.email) {
+    const isWhitelisted = await isEmailWhitelisted(session.user.email);
+    if (!isWhitelisted) {
+      console.log(
+        `Layout: Access denied for non-whitelisted email: ${session.user.email}`
+      );
+      // Sign out the user and redirect to login
+      await auth.api.signOut({
+        headers: await headers(),
+      });
+      redirect("/login?error=access_denied");
+    }
   }
 
   const user: UserProfile = {

@@ -1,10 +1,4 @@
-import {
-  text,
-  sqliteTable,
-  integer,
-  primaryKey,
-  index,
-} from "drizzle-orm/sqlite-core";
+import { text, sqliteTable, integer, index } from "drizzle-orm/sqlite-core";
 
 export const events = sqliteTable("events", {
   id: text("id").primaryKey(),
@@ -44,3 +38,8 @@ export const userAvailabilities = sqliteTable(
     userIdx: index("user_availabilities_user_idx").on(table.userId),
   })
 );
+
+// Table for email whitelist
+export const whitelist = sqliteTable("whitelist", {
+  email: text("email").primaryKey(),
+});

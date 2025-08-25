@@ -10,13 +10,75 @@ import {
 } from "@/components/ui/card";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { signIn } from "@/lib/auth-client";
+import { checkWhitelistAccess } from "./actions";
 
 import { cn } from "@/lib/utils";
 
 export default function SignIn() {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  const handleSignIn = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await signIn.social(
+        {
+          provider: "google",
+          callbackURL: "/",
+        },
+        {
+          onRequest: () => {
+            setLoading(true);
+          },
+          onResponse: async () => {
+            setLoading(false);
+
+            // Check whitelist access using server action
+            try {
+              const result = await checkWhitelistAccess();
+
+              if (!result.success) {
+                if (result.error === "access_denied") {
+                  setError(
+                    "Your email is not authorized to access this application. Please contact an administrator."
+                  );
+                  return;
+                } else {
+                  setError(
+                    "An error occurred while verifying your access. Please try again."
+                  );
+                  return;
+                }
+              }
+
+              // If successful, redirect to dashboard
+              router.push("/dashboard");
+            } catch (actionError) {
+              console.error("Error checking whitelist:", actionError);
+              setError(
+                "An error occurred while verifying your access. Please try again."
+              );
+            }
+          },
+          onError: (error) => {
+            setLoading(false);
+            console.error("Sign in error:", error);
+            setError("An error occurred during sign in. Please try again.");
+          },
+        }
+      );
+    } catch (error) {
+      setLoading(false);
+      console.error("Sign in error:", error);
+      setError("An error occurred during sign in. Please try again.");
+    }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-8">
@@ -30,6 +92,11 @@ export default function SignIn() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
+            {error && (
+              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                {error}
+              </div>
+            )}
             <div
               className={cn(
                 "w-full gap-2 flex items-center",
@@ -40,22 +107,7 @@ export default function SignIn() {
                 variant="outline"
                 className={cn("w-full gap-2")}
                 disabled={loading}
-                onClick={async () => {
-                  await signIn.social(
-                    {
-                      provider: "google",
-                      callbackURL: "/",
-                    },
-                    {
-                      onRequest: (ctx) => {
-                        setLoading(true);
-                      },
-                      onResponse: (ctx) => {
-                        setLoading(false);
-                      },
-                    }
-                  );
-                }}
+                onClick={handleSignIn}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -80,7 +132,7 @@ export default function SignIn() {
                     d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0C79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251"
                   ></path>
                 </svg>
-                Sign in with Google
+                {loading ? "Signing in..." : "Sign in with Google"}
               </Button>
             </div>
           </div>

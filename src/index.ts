@@ -7,7 +7,6 @@ import { join } from "path";
 
 // Load environment variables
 config({ path: join(process.cwd(), ".env") });
-
 if (!process.env.TURSO_DATABASE_URL) {
   throw new Error("TURSO_DATABASE_URL is not defined");
 }

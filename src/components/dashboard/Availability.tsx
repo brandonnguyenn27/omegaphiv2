@@ -87,6 +87,22 @@ function AvailabilityCard({
       setIsDeleting(false);
     }
   };
+
+  // Fix timezone issue by creating date in local timezone
+  const formatDate = (dateValue: Date) => {
+    // Ensure we're working with the local date by using the date parts
+    const localDate = new Date(
+      dateValue.getFullYear(),
+      dateValue.getMonth(),
+      dateValue.getDate()
+    );
+    return format(localDate, "MMM d");
+  };
+
+  const formatTime = (dateValue: Date) => {
+    return format(dateValue, "h:mm a");
+  };
+
   return (
     <Card className="bg-muted/50 hover:bg-muted/70 transition-colors">
       <CardContent className="p-2 pl-4">
@@ -94,11 +110,11 @@ function AvailabilityCard({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <CardTitle className="text-sm font-medium">
-                {format(new Date(availability.date), "MMM d")}
+                {formatDate(availability.date)}
               </CardTitle>
               <CardDescription className="text-xs">
-                {format(new Date(availability.startTime), "h:mm a")} -{" "}
-                {format(new Date(availability.endTime), "h:mm a")}
+                {formatTime(availability.startTime)} -{" "}
+                {formatTime(availability.endTime)}
               </CardDescription>
             </div>
           </div>
