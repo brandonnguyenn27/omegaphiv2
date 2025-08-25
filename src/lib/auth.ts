@@ -4,6 +4,8 @@ import { db } from "..";
 import { user, session, account, verification } from "@/db/auth-schema";
 import { whitelist } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { whitelist } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 console.log("Initializing auth configuration...");
 
