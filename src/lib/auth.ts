@@ -22,6 +22,24 @@ export async function isEmailWhitelisted(email: string): Promise<boolean> {
   }
 }
 
+// Function to safely get user role from session
+export function getUserRole(
+  session: {
+    user?: {
+      id: string;
+      email: string;
+      emailVerified: boolean;
+      name: string;
+      createdAt: Date;
+      updatedAt: Date;
+      image?: string | null;
+      role?: string;
+    };
+  } | null
+): string {
+  return session?.user?.role || "member";
+}
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "sqlite",

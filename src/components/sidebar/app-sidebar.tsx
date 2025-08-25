@@ -17,7 +17,23 @@ import {
 import Link from "next/link";
 import { NavUser } from "./nav-user";
 
-const data = {
+const memberNavData = {
+  navMain: [
+    {
+      title: "Dashboard",
+      url: "/dashboard",
+      items: [
+        {
+          title: "Overview",
+          url: "/dashboard",
+          isActive: true,
+        },
+      ],
+    },
+  ],
+};
+
+const adminNavData = {
   navMain: [
     {
       title: "Dashboard",
@@ -32,11 +48,11 @@ const data = {
     },
     {
       title: "Admin",
-      url: "/",
+      url: "/admin",
       items: [
         {
           title: "Users",
-          url: "/users",
+          url: "/admin/users",
           isActive: false,
         },
       ],
@@ -49,10 +65,18 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     name: string;
     email: string;
     avatar?: string;
+    role?: string;
   };
+  isAdmin?: boolean;
 }
 
-export function AppSidebar({ user, ...props }: AppSidebarProps) {
+export function AppSidebar({
+  user,
+  isAdmin = false,
+  ...props
+}: AppSidebarProps) {
+  const data = isAdmin ? adminNavData : memberNavData;
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
