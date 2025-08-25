@@ -4,6 +4,8 @@ import { db } from "..";
 import { user, session, account, verification } from "@/db/auth-schema";
 import { whitelist } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { whitelist } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 console.log("Initializing auth configuration...");
 
@@ -20,6 +22,24 @@ export async function isEmailWhitelisted(email: string): Promise<boolean> {
     console.error("Error checking whitelist:", error);
     return false;
   }
+}
+
+// Function to safely get user role from session
+export function getUserRole(
+  session: {
+    user?: {
+      id: string;
+      email: string;
+      emailVerified: boolean;
+      name: string;
+      createdAt: Date;
+      updatedAt: Date;
+      image?: string | null;
+      role?: string;
+    };
+  } | null
+): string {
+  return session?.user?.role || "member";
 }
 
 export const auth = betterAuth({

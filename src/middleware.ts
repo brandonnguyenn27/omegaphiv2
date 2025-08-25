@@ -21,13 +21,22 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // For now, we'll let the server-side components handle whitelist checking
-  // The middleware will just ensure there's a valid session cookie
+  // Check for admin routes - these will be handled by the admin layout
+  const isAdminRoute = pathname.startsWith("/admin");
+
   if (sessionCookie && !isPublicPath) {
-    // Session exists, allow access - whitelist checking will be done server-side
-    return NextResponse.next();
+    // For admin routes, let the admin layout handle the role check
+    // For regular routes, just ensure there's a valid session
+    if (isAdminRoute) {
+      // Admin routes will be protected by the admin layout
+      return NextResponse.next();
+    } else {
+      // Regular routes - session exists, allow access
+      return NextResponse.next();
+    }
   }
 
+  return NextResponse.next();
   return NextResponse.next();
 }
 
