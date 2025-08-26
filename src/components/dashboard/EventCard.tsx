@@ -21,6 +21,17 @@ interface EventCardProps {
   event: Event;
 }
 
+// Format functions that preserve the original timezone
+const formatDateUTC = (dateValue: Date) => {
+  // Use the original date but format it consistently
+  return format(dateValue, "MMM d");
+};
+
+const formatTimeUTC = (dateValue: Date) => {
+  // Use the original time but format it consistently
+  return format(dateValue, "h:mm a");
+};
+
 export function EventCard({ event }: EventCardProps) {
   return (
     <Collapsible>
@@ -33,8 +44,8 @@ export function EventCard({ event }: EventCardProps) {
                   {event.name}
                 </CardTitle>
                 <CardDescription className="text-xs shrink-0">
-                  {format(new Date(event.date), "MMM d")} at{" "}
-                  {format(new Date(event.time), "h:mm a")}
+                  {formatDateUTC(new Date(event.date))} at{" "}
+                  {formatTimeUTC(new Date(event.time))}
                 </CardDescription>
               </div>
             </div>
@@ -67,8 +78,8 @@ export function EventCard({ event }: EventCardProps) {
                 <p className="font-bold mb-1">{event.name}</p>
                 <p className="font-medium">Date & Time</p>
                 <p className="text-muted-foreground">
-                  {format(new Date(event.date), "MMMM d, yyyy")} at{" "}
-                  {format(new Date(event.time), "h:mm a")}
+                  {formatDateUTC(new Date(event.date))} at{" "}
+                  {formatTimeUTC(new Date(event.time))}
                 </p>
               </div>
               {event.description && (

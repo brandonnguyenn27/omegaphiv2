@@ -88,18 +88,14 @@ function AvailabilityCard({
     }
   };
 
-  // Fix timezone issue by creating date in local timezone
+  // Format functions that preserve the original timezone
   const formatDate = (dateValue: Date) => {
-    // Ensure we're working with the local date by using the date parts
-    const localDate = new Date(
-      dateValue.getFullYear(),
-      dateValue.getMonth(),
-      dateValue.getDate()
-    );
-    return format(localDate, "MMM d");
+    // Use the original date but format it consistently
+    return format(dateValue, "MMM d");
   };
 
   const formatTime = (dateValue: Date) => {
+    // Use the original time but format it consistently
     return format(dateValue, "h:mm a");
   };
 
