@@ -21,15 +21,22 @@ interface EventCardProps {
   event: Event;
 }
 
-// Format functions that preserve the original timezone
+// Format functions that handle timezone conversion properly
 const formatDateUTC = (dateValue: Date) => {
   // Use the original date but format it consistently
   return format(dateValue, "MMM d");
 };
 
 const formatTimeUTC = (dateValue: Date) => {
-  // Use the original time but format it consistently
-  return format(dateValue, "h:mm a");
+  // Extract the time components and create a new date in local timezone
+  const hours = dateValue.getHours();
+  const minutes = dateValue.getMinutes();
+
+  // Create a new date object with the same time in local timezone
+  const localTime = new Date();
+  localTime.setHours(hours, minutes, 0, 0);
+
+  return format(localTime, "h:mm a");
 };
 
 export function EventCard({ event }: EventCardProps) {
