@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 
 import { addAvailability } from "@/app/(authenticated)/dashboard/actions";
 import {
@@ -14,9 +14,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { ActionResponse } from "@/app/(authenticated)/dashboard/actions";
-import { useQuery } from "@tanstack/react-query";
-import { getInterviewDates } from "@/app/(authenticated)/dashboard/actions";
-import SkeletonFormCard from "../loading/FormSkeleton";
+import { InferSelectModel } from "drizzle-orm";
+import { interviewDates } from "@/db/schema";
 import {
   formatDateForDisplay,
   formatDateForValue,
@@ -30,6 +29,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+type InterviewDates = InferSelectModel<typeof interviewDates>;
+
 const initialState: ActionResponse = {
   success: false,
   message: "",
@@ -37,15 +38,26 @@ const initialState: ActionResponse = {
 
 interface AvailabilityFormProps {
   onSubmissionSuccess: () => void;
+  interviewDates: InterviewDates[];
 }
 
 export default function AvailabilityForm({
   onSubmissionSuccess,
+  interviewDates,
 }: AvailabilityFormProps) {
   const [state, action, isPending] = useActionState(
     addAvailability,
     initialState
   );
+
+  // Local state for form validation
+  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [startTime, setStartTime] = useState<string>("");
+  const [endTime, setEndTime] = useState<string>("");
+  const [validationErrors, setValidationErrors] = useState<{
+    startTime?: string;
+    endTime?: string;
+  }>({});
 
   useEffect(() => {
     if (state.success) {
@@ -55,26 +67,86 @@ export default function AvailabilityForm({
     }
   }, [state, onSubmissionSuccess]);
 
-  const {
-    data: interviewDates,
-    isError,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["interviewDates"],
-    queryFn: getInterviewDates,
-  });
+  // Get the selected interview date object
+  const selectedInterviewDate = interviewDates.find(
+    (date) => formatDateForValue(date.date) === selectedDate
+  );
 
-  if (isLoading) {
-    return <SkeletonFormCard />;
-  }
-  if (isError) {
-    return (
-      <div className="text-red-500">
-        Error fetching interview dates: {error.message}
-      </div>
-    );
-  }
+  // Validation function
+  const validateTimes = () => {
+    const errors: { startTime?: string; endTime?: string } = {};
+
+    if (!selectedInterviewDate) {
+      return errors;
+    }
+
+    if (startTime && endTime) {
+      // Convert interview times to HH:MM format for comparison
+      const interviewStartTimeStr = new Date(
+        selectedInterviewDate.startTime
+      ).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+      const interviewEndTimeStr = new Date(
+        selectedInterviewDate.endTime
+      ).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+
+      // Compare time strings directly
+      if (startTime < interviewStartTimeStr) {
+        errors.startTime = `Start time must be at or after ${formatTimeForDisplay(
+          selectedInterviewDate.startTime
+        )}`;
+      }
+
+      if (endTime > interviewEndTimeStr) {
+        errors.endTime = `End time must be at or before ${formatTimeForDisplay(
+          selectedInterviewDate.endTime
+        )}`;
+      }
+
+      // Check if start time is after end time
+      if (startTime >= endTime) {
+        errors.endTime = "End time must be after start time";
+      }
+    }
+
+    setValidationErrors(errors);
+    return errors;
+  };
+
+  // Handle time changes and validate
+  const handleStartTimeChange = (value: string) => {
+    setStartTime(value);
+    if (value && endTime) {
+      setTimeout(() => validateTimes(), 0);
+    }
+  };
+
+  const handleEndTimeChange = (value: string) => {
+    setEndTime(value);
+    if (startTime && value) {
+      setTimeout(() => validateTimes(), 0);
+    }
+  };
+
+  // Handle form submission with validation
+  const handleSubmit = (formData: FormData) => {
+    const errors = validateTimes();
+
+    if (Object.keys(errors).length > 0) {
+      // Prevent form submission if there are validation errors
+      return;
+    }
+
+    // Submit the form
+    action(formData);
+  };
 
   if (!interviewDates || interviewDates.length === 0) {
     return (
@@ -115,25 +187,30 @@ export default function AvailabilityForm({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={action}>
+        <form action={handleSubmit}>
           <div className=" gap-4 flex flex-col">
             <div>
               <input
                 type="hidden"
                 name="date"
-                value={state?.values?.date || ""}
+                value={selectedDate}
                 id="date-input"
               />
               <Select
                 name="dateSelect"
-                defaultValue={state?.values?.date || ""}
+                value={selectedDate}
                 onValueChange={(value) => {
+                  setSelectedDate(value);
                   const hiddenInput = document.getElementById(
                     "date-input"
                   ) as HTMLInputElement;
                   if (hiddenInput) {
                     hiddenInput.value = value;
                   }
+                  // Clear times when date changes
+                  setStartTime("");
+                  setEndTime("");
+                  setValidationErrors({});
                 }}
               >
                 <SelectTrigger
@@ -158,17 +235,35 @@ export default function AvailabilityForm({
                 </p>
               )}
             </div>
+
+            {selectedInterviewDate && (
+              <div className="text-sm text-blue-600 bg-blue-50 border border-blue-200 p-3 rounded-md">
+                <strong>📅 Selected Interview Date:</strong>{" "}
+                {formatDateForDisplay(selectedInterviewDate.date)}
+                <br />
+                <strong>⏰ Available Time Slot:</strong>{" "}
+                {formatTimeForDisplay(selectedInterviewDate.startTime)} -{" "}
+                {formatTimeForDisplay(selectedInterviewDate.endTime)}
+              </div>
+            )}
+
             <div>
               <Input
                 name="startTime"
                 type="time"
-                defaultValue={state?.values?.startTime || ""}
+                value={startTime}
+                onChange={(e) => handleStartTimeChange(e.target.value)}
                 required
-                className={state?.errors?.startTime ? "border-red-500" : ""}
+                className={
+                  state?.errors?.startTime || validationErrors.startTime
+                    ? "border-red-500"
+                    : ""
+                }
+                disabled={!selectedDate}
               />
-              {state?.errors?.startTime && (
+              {(state?.errors?.startTime || validationErrors.startTime) && (
                 <p id="start-error" className="text-sm text-red-500">
-                  {state.errors.startTime[0]}
+                  {state?.errors?.startTime?.[0] || validationErrors.startTime}
                 </p>
               )}
             </div>
@@ -176,13 +271,19 @@ export default function AvailabilityForm({
               <Input
                 name="endTime"
                 type="time"
-                defaultValue={state?.values?.endTime || ""}
+                value={endTime}
+                onChange={(e) => handleEndTimeChange(e.target.value)}
                 required
-                className={state?.errors?.endTime ? "border-red-500" : ""}
+                className={
+                  state?.errors?.endTime || validationErrors.endTime
+                    ? "border-red-500"
+                    : ""
+                }
+                disabled={!selectedDate}
               />
-              {state?.errors?.endTime && (
+              {(state?.errors?.endTime || validationErrors.endTime) && (
                 <p id="end-error" className="text-sm text-red-500">
-                  {state.errors.endTime[0]}
+                  {state?.errors?.endTime?.[0] || validationErrors.endTime}
                 </p>
               )}
             </div>
@@ -197,7 +298,13 @@ export default function AvailabilityForm({
             <Button
               type="submit"
               className="w-full cursor-pointer"
-              disabled={isPending}
+              disabled={
+                isPending ||
+                !selectedDate ||
+                !startTime ||
+                !endTime ||
+                Object.keys(validationErrors).length > 0
+              }
             >
               {isPending ? "Saving..." : "Save"}
             </Button>

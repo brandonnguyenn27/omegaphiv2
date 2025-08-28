@@ -100,12 +100,12 @@ export async function addAvailability(
   const endTimeString = formData.get("endTime") as string;
 
   const dataToValidate = {
-    date: dateString ? new Date(dateString) : undefined,
+    date: dateString ? new Date(dateString + "T00:00:00.000Z") : undefined,
     startTime: startTimeString
-      ? new Date(`1970-01-01T${startTimeString}`)
+      ? new Date(`1970-01-01T${startTimeString}:00.000Z`)
       : undefined,
     endTime: endTimeString
-      ? new Date(`1970-01-01T${endTimeString}`)
+      ? new Date(`1970-01-01T${endTimeString}:00.000Z`)
       : undefined,
   };
 

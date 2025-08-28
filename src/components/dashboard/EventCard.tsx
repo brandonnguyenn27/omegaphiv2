@@ -4,7 +4,6 @@ import {
   CardDescription,
   CardTitle,
 } from "@/components/ui/card";
-import { format } from "date-fns";
 import { events } from "@/db/schema";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -14,30 +13,13 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
+import { formatDateUTC, formatTimeUTC } from "@/utils/helpers";
 
 type Event = typeof events.$inferSelect;
 
 interface EventCardProps {
   event: Event;
 }
-
-// Format functions that handle timezone conversion properly
-const formatDateUTC = (dateValue: Date) => {
-  // Use the original date but format it consistently
-  return format(dateValue, "MMM d");
-};
-
-const formatTimeUTC = (dateValue: Date) => {
-  // Extract the time components and create a new date in local timezone
-  const hours = dateValue.getHours();
-  const minutes = dateValue.getMinutes();
-
-  // Create a new date object with the same time in local timezone
-  const localTime = new Date();
-  localTime.setHours(hours, minutes, 0, 0);
-
-  return format(localTime, "h:mm a");
-};
 
 export function EventCard({ event }: EventCardProps) {
   return (

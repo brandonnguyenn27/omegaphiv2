@@ -9,15 +9,21 @@ import {
   DialogOverlay,
 } from "@/components/ui/dialog";
 import AvailabilityForm from "./AvailabilityForm";
+import { InferSelectModel } from "drizzle-orm";
+import { interviewDates } from "@/db/schema";
+
+type InterviewDates = InferSelectModel<typeof interviewDates>;
 
 interface AvailabilityDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  interviewDates: InterviewDates[];
 }
 
 export default function AvailabilityDialog({
   isOpen,
   onClose,
+  interviewDates,
 }: AvailabilityDialogProps) {
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -37,7 +43,10 @@ export default function AvailabilityDialog({
           <DialogHeader>
             <DialogTitle>Add Availability</DialogTitle>
           </DialogHeader>
-          <AvailabilityForm onSubmissionSuccess={handleFormSubmissionSuccess} />
+          <AvailabilityForm
+            onSubmissionSuccess={handleFormSubmissionSuccess}
+            interviewDates={interviewDates}
+          />
         </DialogContent>
       </DialogPortal>
     </Dialog>

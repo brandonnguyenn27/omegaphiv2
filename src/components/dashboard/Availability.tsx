@@ -7,22 +7,25 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { format } from "date-fns";
 import { InferSelectModel } from "drizzle-orm";
-import { userAvailabilities } from "@/db/schema";
+import { userAvailabilities, interviewDates } from "@/db/schema";
 import AvailabilityDialog from "./AvailabilityDialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { deleteAvailability } from "@/app/(authenticated)/dashboard/actions";
 import { Loader2, Trash } from "lucide-react";
+import { formatTimeUTC, formatDateForDisplay } from "@/utils/helpers";
 
 type UserAvailabilities = InferSelectModel<typeof userAvailabilities>;
+type InterviewDates = InferSelectModel<typeof interviewDates>;
 
 export default function AvailabilityComponent({
   availabilities,
+  interviewDates,
 }: {
   availabilities: UserAvailabilities[];
+  interviewDates: InterviewDates[];
 }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -66,7 +69,11 @@ export default function AvailabilityComponent({
         </CardContent>
       </Card>
 
-      <AvailabilityDialog isOpen={isDialogOpen} onClose={handleCloseDialog} />
+      <AvailabilityDialog
+        isOpen={isDialogOpen}
+        onClose={handleCloseDialog}
+        interviewDates={interviewDates}
+      />
     </div>
   );
 }
@@ -88,17 +95,6 @@ function AvailabilityCard({
     }
   };
 
-  // Format functions that preserve the original timezone
-  const formatDate = (dateValue: Date) => {
-    // Use the original date but format it consistently
-    return format(dateValue, "MMM d");
-  };
-
-  const formatTime = (dateValue: Date) => {
-    // Use the original time but format it consistently
-    return format(dateValue, "h:mm a");
-  };
-
   return (
     <Card className="bg-muted/50 hover:bg-muted/70 transition-colors">
       <CardContent className="p-2 pl-4">
@@ -106,11 +102,11 @@ function AvailabilityCard({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <CardTitle className="text-sm font-medium">
-                {formatDate(availability.date)}
+                {formatDateForDisplay(availability.date)}
               </CardTitle>
               <CardDescription className="text-xs">
-                {formatTime(availability.startTime)} -{" "}
-                {formatTime(availability.endTime)}
+                {formatTimeUTC(availability.startTime)} -{" "}
+                {formatTimeUTC(availability.endTime)}
               </CardDescription>
             </div>
           </div>
