@@ -81,13 +81,14 @@ export default function AvailabilityForm({
     }
 
     if (startTime && endTime) {
-      // Convert interview times to HH:MM format for comparison
+      // Convert interview times to HH:MM format for comparison using UTC
       const interviewStartTimeStr = new Date(
         selectedInterviewDate.startTime
       ).toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
+        timeZone: "UTC", // Use UTC since database stores UTC times
       });
       const interviewEndTimeStr = new Date(
         selectedInterviewDate.endTime
@@ -95,6 +96,7 @@ export default function AvailabilityForm({
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
+        timeZone: "UTC", // Use UTC since database stores UTC times
       });
 
       // Compare time strings directly

@@ -1,9 +1,7 @@
-import { format } from "date-fns";
-
-// Format date for display preserving original timezone
+// Format date for display from UTC database values
 export const formatDateForDisplay = (dateString: string | Date) => {
   const date = new Date(dateString);
-  // Use UTC methods to avoid timezone conversion issues
+  // Since dates are stored in UTC, format them in UTC
   return date.toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -13,19 +11,20 @@ export const formatDateForDisplay = (dateString: string | Date) => {
   });
 };
 
-// Format date for form submission (YYYY-MM-DD) preserving original timezone
+// Format date for form submission (YYYY-MM-DD) from UTC database values
 export const formatDateForValue = (dateString: string | Date) => {
   const date = new Date(dateString);
-  // Use UTC methods to avoid timezone conversion issues
+  // Since dates are stored in UTC, use UTC methods
   const year = date.getUTCFullYear();
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
   const day = String(date.getUTCDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 
-// Format time for display preserving original timezone
+// Format time for display from UTC database values
 export const formatTimeForDisplay = (timeString: string | Date) => {
   const date = new Date(timeString);
+  // Since times are stored in UTC, format them in UTC
   return date.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
@@ -34,13 +33,23 @@ export const formatTimeForDisplay = (timeString: string | Date) => {
   });
 };
 
-// Format functions that handle timezone conversion properly
+// Format date for EventCard (shorter format)
 export const formatDateUTC = (dateValue: Date) => {
-  // Use the original date but format it consistently
-  return format(dateValue, "MMM d");
+  // Since dates are stored in UTC, format them in UTC
+  return dateValue.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 };
 
+// Format time for EventCard and AvailabilityCard from UTC database values
 export const formatTimeUTC = (dateValue: Date) => {
-  // Since we're storing time-only values, just format directly
-  return format(dateValue, "h:mm a");
+  // Since times are stored in UTC, format them in UTC
+  return dateValue.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "UTC", // Force UTC to prevent timezone conversion
+  });
 };
