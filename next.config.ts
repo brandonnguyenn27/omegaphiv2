@@ -11,12 +11,18 @@ const nextConfig: NextConfig = {
     ],
   },
   async rewrites() {
-    return [
-      {
-        source: "/api/python/:path*",
-        destination: "http://127.0.0.1:5328/:path*", // Proxy to Backend
-      },
-    ];
+    // Only use Flask proxy in development
+    if (process.env.NODE_ENV === "development") {
+      return [
+        {
+          source: "/api/python/:path*",
+          destination: "http://127.0.0.1:5328/:path*", // Proxy to Flask Backend (local only)
+        },
+      ];
+    }
+
+    // In production, let Vercel handle Python functions directly
+    return [];
   },
 };
 
