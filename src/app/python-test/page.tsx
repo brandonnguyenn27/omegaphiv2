@@ -12,9 +12,24 @@ import { useQuery } from "@tanstack/react-query";
 
 // Simple API function
 const fetchHello = async () => {
-  const response = await fetch("/api/python/hello");
-  if (!response.ok) throw new Error("Failed to fetch hello");
-  return response.json();
+  try {
+    const response = await fetch("/api/python/hello");
+    console.log("Response status:", response.status);
+    console.log("Response headers:", response.headers);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log("Error response body:", errorText);
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log("Success response:", data);
+    return data;
+  } catch (error) {
+    console.error("Fetch error:", error);
+    throw error;
+  }
 };
 
 export default function PythonBackendTest() {
