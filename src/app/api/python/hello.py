@@ -1,14 +1,10 @@
-import json
-
-def handler(request, context):
-    """Vercel serverless function handler"""
-    return {
-        "statusCode": 200,
-        "headers": {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
-        },
-        "body": json.dumps({
-            "message": "Hello World from Python Backend!"
-        })
-    }
+from http.server import BaseHTTPRequestHandler
+ 
+class handler(BaseHTTPRequestHandler):
+ 
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type','text/plain')
+        self.end_headers()
+        self.wfile.write('Hello, world!'.encode('utf-8'))
+        return
