@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "api/python/**/*.py": {
+      "runtime": "python3.11"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/python/(.*)",
+      "destination": "/api/python/$1"
+    }
+  ]
+}
