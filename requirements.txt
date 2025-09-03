@@ -1,0 +1,2 @@
+# Basic Python dependencies for Vercel Functions
+# No external packages needed for simple HTTP responses
