@@ -44,6 +44,7 @@ export async function getInterviewSchedulerData() {
           email: rushee.email,
           phoneNumber: rushee.phoneNumber,
           major: rushee.major,
+          interviewScheduled: rushee.interviewScheduled,
           createdAt: rushee.createdAt,
           updatedAt: rushee.updatedAt,
         },
@@ -94,6 +95,7 @@ export async function getInterviewSchedulerData() {
           email: rushee.email,
           phoneNumber: rushee.phoneNumber,
           major: rushee.major,
+          interviewScheduled: rushee.interviewScheduled,
           createdAt: rushee.createdAt,
           updatedAt: rushee.updatedAt,
         },
@@ -220,6 +222,15 @@ export async function createInterviewAssignment(formData: FormData) {
       });
     }
 
+    // Update rushee's interview_scheduled flag to true
+    await db
+      .update(rushee)
+      .set({
+        interviewScheduled: true,
+        updatedAt: now,
+      })
+      .where(eq(rushee.id, rusheeId));
+
     revalidatePath("/admin/interview-scheduler");
     return {
       success: true,
@@ -240,9 +251,43 @@ export async function deleteInterviewAssignment(assignmentId: string) {
   try {
     await checkSession();
 
+    // Get the assignment to find the rusheeId before deleting
+    const assignment = await db
+      .select({ rusheeId: interviewAssignments.rusheeId })
+      .from(interviewAssignments)
+      .where(eq(interviewAssignments.id, assignmentId))
+      .limit(1);
+
+    if (assignment.length === 0) {
+      throw new Error("Assignment not found");
+    }
+
+    const rusheeId = assignment[0].rusheeId;
+
+    // Delete the assignment
     await db
       .delete(interviewAssignments)
       .where(eq(interviewAssignments.id, assignmentId));
+
+    // Check if the rushee has any other interview assignments
+    const remainingAssignments = await db
+      .select()
+      .from(interviewAssignments)
+      .where(eq(interviewAssignments.rusheeId, rusheeId))
+      .limit(1);
+
+    const now = new Date();
+
+    // If no remaining assignments, set interview_scheduled to false
+    if (remainingAssignments.length === 0) {
+      await db
+        .update(rushee)
+        .set({
+          interviewScheduled: false,
+          updatedAt: now,
+        })
+        .where(eq(rushee.id, rusheeId));
+    }
 
     revalidatePath("/admin/interview-scheduler");
     return {

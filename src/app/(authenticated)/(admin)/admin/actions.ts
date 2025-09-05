@@ -239,6 +239,7 @@ async function createRusheeWithAvailabilities(
       email: data.rushee.email,
       phoneNumber: data.rushee.phoneNumber || null,
       major: data.rushee.major || null,
+      interviewScheduled: false, // New rushees start with no interview scheduled
       createdAt: now,
       updatedAt: now,
     })
@@ -254,50 +255,97 @@ async function createRusheeWithAvailabilities(
 
   // Create availability records
   console.log("Preparing availability records for insertion...");
-  const availabilityRecords = data.availabilities.map((availability, index) => {
-    // Create proper Date objects for Drizzle timestamp mode
-    const dateObj = new Date(availability.date + "T00:00:00.000Z"); // Convert date string to UTC date
-    const startTimeObj = new Date(availability.startTime); // Already in UTC format from Python API
-    const endTimeObj = new Date(availability.endTime); // Already in UTC format from Python API
+  console.log(`Total availabilities from PDF: ${data.availabilities.length}`);
 
-    // Find matching interview date
-    const matchingInterviewDate = allInterviewDates.find((id) => {
-      const interviewDateStr = id.date.toISOString().split("T")[0];
-      const availabilityDateStr = dateObj.toISOString().split("T")[0];
-      return interviewDateStr === availabilityDateStr;
-    });
+  // Filter out availabilities with null dates
+  const validAvailabilities = data.availabilities.filter(
+    (availability, index) => {
+      if (!availability.date) {
+        console.log(`Skipping availability ${index + 1}: date is null`);
+        return false;
+      }
+      return true;
+    }
+  );
 
-    const record = {
-      id: uuidv4(),
-      rusheeId: rusheeId,
-      interviewDateId: matchingInterviewDate?.id || null,
-      date: dateObj, // Date object for Drizzle timestamp mode
-      startTime: startTimeObj, // Date object for Drizzle timestamp mode
-      endTime: endTimeObj, // Date object for Drizzle timestamp mode
-      createdAt: now,
-      updatedAt: now,
-    };
-    console.log(`Availability record ${index + 1}:`, {
-      id: record.id,
-      interviewDateId: matchingInterviewDate?.id || "NO MATCH",
-      date: `${
-        availability.date
-      } -> ${dateObj.toISOString()} (Unix: ${Math.floor(
-        dateObj.getTime() / 1000
-      )})`,
-      startTime: `${
-        availability.startTime
-      } -> ${startTimeObj.toISOString()} (Unix: ${Math.floor(
-        startTimeObj.getTime() / 1000
-      )})`,
-      endTime: `${
-        availability.endTime
-      } -> ${endTimeObj.toISOString()} (Unix: ${Math.floor(
-        endTimeObj.getTime() / 1000
-      )})`,
-    });
-    return record;
-  });
+  console.log(
+    `Valid availabilities after filtering: ${validAvailabilities.length}`
+  );
+
+  // Remove duplicate availabilities based on date, startTime, and endTime
+  const uniqueAvailabilities = validAvailabilities.filter(
+    (availability, index, array) => {
+      const isDuplicate =
+        array.findIndex(
+          (other, otherIndex) =>
+            otherIndex < index &&
+            other.date === availability.date &&
+            other.startTime === availability.startTime &&
+            other.endTime === availability.endTime
+        ) !== -1;
+
+      if (isDuplicate) {
+        console.log(
+          `Skipping duplicate availability ${
+            index + 1
+          }: same date/time as previous entry`
+        );
+      }
+
+      return !isDuplicate;
+    }
+  );
+
+  console.log(
+    `Unique availabilities after deduplication: ${uniqueAvailabilities.length}`
+  );
+
+  const availabilityRecords = uniqueAvailabilities.map(
+    (availability, index) => {
+      // Create proper Date objects for Drizzle timestamp mode
+      const dateObj = new Date(availability.date + "T00:00:00.000Z"); // Convert date string to UTC date
+      const startTimeObj = new Date(availability.startTime); // Already in UTC format from Python API
+      const endTimeObj = new Date(availability.endTime); // Already in UTC format from Python API
+
+      // Find matching interview date
+      const matchingInterviewDate = allInterviewDates.find((id) => {
+        const interviewDateStr = id.date.toISOString().split("T")[0];
+        const availabilityDateStr = dateObj.toISOString().split("T")[0];
+        return interviewDateStr === availabilityDateStr;
+      });
+
+      const record = {
+        id: uuidv4(),
+        rusheeId: rusheeId,
+        interviewDateId: matchingInterviewDate?.id || null,
+        date: dateObj, // Date object for Drizzle timestamp mode
+        startTime: startTimeObj, // Date object for Drizzle timestamp mode
+        endTime: endTimeObj, // Date object for Drizzle timestamp mode
+        createdAt: now,
+        updatedAt: now,
+      };
+      console.log(`Availability record ${index + 1}:`, {
+        id: record.id,
+        interviewDateId: matchingInterviewDate?.id || "NO MATCH",
+        date: `${
+          availability.date
+        } -> ${dateObj.toISOString()} (Unix: ${Math.floor(
+          dateObj.getTime() / 1000
+        )})`,
+        startTime: `${
+          availability.startTime
+        } -> ${startTimeObj.toISOString()} (Unix: ${Math.floor(
+          startTimeObj.getTime() / 1000
+        )})`,
+        endTime: `${
+          availability.endTime
+        } -> ${endTimeObj.toISOString()} (Unix: ${Math.floor(
+          endTimeObj.getTime() / 1000
+        )})`,
+      });
+      return record;
+    }
+  );
 
   console.log(
     `Inserting ${availabilityRecords.length} availability records into database...`

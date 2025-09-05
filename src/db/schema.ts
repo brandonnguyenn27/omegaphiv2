@@ -59,6 +59,9 @@ export const rushee = sqliteTable("rushee", {
   email: text("email").notNull().unique(),
   phoneNumber: text("phone_number"),
   major: text("major"),
+  interviewScheduled: integer("interview_scheduled", { mode: "boolean" })
+    .notNull()
+    .default(false),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });

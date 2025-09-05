@@ -163,7 +163,9 @@ export default function InterviewScheduler({
                   {rushees.map((rushee: Rushee) => (
                     <React.Fragment key={rushee.id}>
                       <div
-                        className={`sticky left-0 bg-white border-r border-b border-gray-300 p-2 text-sm font-medium z-20`}
+                        className={`sticky left-0 bg-white border-r border-b border-gray-300 p-2 text-sm font-medium z-20 ${
+                          rushee.interviewScheduled ? "text-green-600" : ""
+                        }`}
                       >
                         {rushee.name}
                       </div>

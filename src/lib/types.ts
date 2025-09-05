@@ -40,6 +40,7 @@ export interface CreateRusheeResponse {
     email: string;
     phoneNumber: string | null;
     major: string | null;
+    interviewScheduled: boolean;
     createdAt: Date;
     updatedAt: Date;
   };
@@ -105,6 +106,7 @@ export interface Rushee {
   email: string;
   phoneNumber: string | null;
   major: string | null;
+  interviewScheduled: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -1,0 +1,1 @@
+ALTER TABLE `rushee` ADD `interview_scheduled` integer DEFAULT false NOT NULL;
