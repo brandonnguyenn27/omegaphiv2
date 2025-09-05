@@ -55,6 +55,21 @@ const adminNavData = {
           url: "/admin/users",
           isActive: false,
         },
+        {
+          title: "Applications",
+          url: "/admin/rushee",
+          isActive: false,
+        },
+        {
+          title: "Availabilities",
+          url: "/admin/rushee/availabilities",
+          isActive: false,
+        },
+        {
+          title: "Interview Scheduler",
+          url: "/admin/interview-scheduler",
+          isActive: false,
+        },
       ],
     },
   ],

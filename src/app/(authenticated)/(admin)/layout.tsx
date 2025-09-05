@@ -1,68 +1,35 @@
-import * as React from "react";
-import { AppSidebar } from "../../../components/sidebar/app-sidebar";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { DashboardHeader } from "@/components/sidebar/dashboard-header";
 import { redirect } from "next/navigation";
-import { auth, isEmailWhitelisted, getUserRole } from "@/lib/auth";
+import { auth, getUserRole } from "@/lib/auth";
 import { headers } from "next/headers";
-
-interface UserProfile {
-  name: string;
-  email: string;
-  avatar?: string;
-  role: string;
-}
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Get session (authentication is already handled by parent layout)
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
+  // Double-check session exists (should always be true due to parent layout)
   if (!session?.user) {
+    console.log("No session or user found, redirecting to login");
     redirect("/login");
   }
 
-  // Check if user is still whitelisted
-  if (session.user.email) {
-    const isWhitelisted = await isEmailWhitelisted(session.user.email);
-    if (!isWhitelisted) {
-      console.log(
-        `Admin Layout: Access denied for non-whitelisted email: ${session.user.email}`
-      );
-      await auth.api.signOut({
-        headers: await headers(),
-      });
-      redirect("/login?error=access_denied");
-    }
-  }
-
   // Check if user has admin role
-  const userRole = getUserRole(session);
+  const userRole = await getUserRole(session);
+
   if (userRole !== "admin") {
     console.log(
-      `Admin Layout: Access denied for non-admin user: ${session.user.email}`
+      `Admin Layout: Access denied for non-admin user: ${session.user.email} (role: ${userRole})`
     );
     redirect("/dashboard");
   }
 
-  const user: UserProfile = {
-    name: session.user.name as string,
-    email: session.user.email as string,
-    avatar: session.user.image || undefined,
-    role: userRole,
-  };
+  console.log("Admin access granted for:", session.user.email);
 
-  return (
-    <SidebarProvider>
-      <AppSidebar user={user} isAdmin={true} />
-      <SidebarInset>
-        <DashboardHeader />
-        <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
-      </SidebarInset>
-    </SidebarProvider>
-  );
+  // Admin layout just passes through children - sidebar is handled by parent (authenticated) layout
+  return <>{children}</>;
 }

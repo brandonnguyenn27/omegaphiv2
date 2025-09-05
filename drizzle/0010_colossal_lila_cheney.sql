@@ -1,0 +1,1 @@
+ALTER TABLE `user_availabilities` ALTER COLUMN "user_id" TO "user_id" text NOT NULL REFERENCES user(id) ON DELETE cascade ON UPDATE no action;

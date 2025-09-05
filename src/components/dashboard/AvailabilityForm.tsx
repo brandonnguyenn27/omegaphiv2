@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 
-import { addAvailability } from "@/app/(authenticated)/dashboard/actions";
+import { addAvailability } from "@/app/(authenticated)/(user)/dashboard/actions";
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import type { ActionResponse } from "@/app/(authenticated)/dashboard/actions";
+import type { ActionResponse } from "@/app/(authenticated)/(user)/dashboard/actions";
 import { InferSelectModel } from "drizzle-orm";
 import { interviewDates } from "@/db/schema";
 import {
@@ -198,6 +198,12 @@ export default function AvailabilityForm({
                 value={selectedDate}
                 id="date-input"
               />
+              <input
+                type="hidden"
+                name="interviewDateId"
+                value={selectedInterviewDate?.id || ""}
+                id="interview-date-id-input"
+              />
               <Select
                 name="dateSelect"
                 value={selectedDate}
@@ -206,9 +212,22 @@ export default function AvailabilityForm({
                   const hiddenInput = document.getElementById(
                     "date-input"
                   ) as HTMLInputElement;
+                  const interviewDateIdInput = document.getElementById(
+                    "interview-date-id-input"
+                  ) as HTMLInputElement;
+
                   if (hiddenInput) {
                     hiddenInput.value = value;
                   }
+
+                  // Update interview date ID
+                  const selectedInterviewDate = interviewDates.find(
+                    (date) => formatDateForValue(date.date) === value
+                  );
+                  if (interviewDateIdInput && selectedInterviewDate) {
+                    interviewDateIdInput.value = selectedInterviewDate.id;
+                  }
+
                   // Clear times when date changes
                   setStartTime("");
                   setEndTime("");

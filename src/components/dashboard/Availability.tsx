@@ -13,7 +13,7 @@ import AvailabilityDialog from "./AvailabilityDialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { deleteAvailability } from "@/app/(authenticated)/dashboard/actions";
+import { deleteAvailability } from "@/app/(authenticated)/(user)/dashboard/actions";
 import { Loader2, Trash } from "lucide-react";
 import { formatTimeUTC, formatDateForDisplay } from "@/utils/helpers";
 
@@ -102,11 +102,16 @@ function AvailabilityCard({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <CardTitle className="text-sm font-medium">
-                {formatDateForDisplay(availability.date)}
+                {availability.date
+                  ? formatDateForDisplay(availability.date)
+                  : "No date"}
               </CardTitle>
               <CardDescription className="text-xs">
-                {formatTimeUTC(availability.startTime)} -{" "}
-                {formatTimeUTC(availability.endTime)}
+                {availability.startTime && availability.endTime
+                  ? `${formatTimeUTC(availability.startTime)} - ${formatTimeUTC(
+                      availability.endTime
+                    )}`
+                  : "No time set"}
               </CardDescription>
             </div>
           </div>

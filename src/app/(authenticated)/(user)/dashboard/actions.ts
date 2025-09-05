@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 import { InferSelectModel } from "drizzle-orm";
 import { insertUserAvailabilitySchema } from "@/lib/zod/schema";
 import { revalidatePath } from "next/cache";
+
 type UserAvailabilities = InferSelectModel<typeof userAvailabilities>;
 type InterviewDates = InferSelectModel<typeof interviewDates>;
 
@@ -98,15 +99,47 @@ export async function addAvailability(
   const dateString = formData.get("date") as string;
   const startTimeString = formData.get("startTime") as string;
   const endTimeString = formData.get("endTime") as string;
+  const interviewDateId = formData.get("interviewDateId") as string;
+
+  // Get the interview date to use for the timestamps
+  let interviewDate: Date | undefined;
+  if (interviewDateId) {
+    const { interviewDates } = await import("@/db/schema");
+    const { eq } = await import("drizzle-orm");
+    const interviewDateRecord = await db
+      .select()
+      .from(interviewDates)
+      .where(eq(interviewDates.id, interviewDateId))
+      .limit(1);
+
+    if (interviewDateRecord.length > 0) {
+      interviewDate = interviewDateRecord[0].date;
+    }
+  }
+
+  // Fallback to the date string if no interview date found
+  if (!interviewDate && dateString) {
+    interviewDate = new Date(dateString + "T00:00:00.000Z");
+  }
 
   const dataToValidate = {
-    date: dateString ? new Date(dateString + "T00:00:00.000Z") : undefined,
-    startTime: startTimeString
-      ? new Date(`1970-01-01T${startTimeString}:00.000Z`)
-      : undefined,
-    endTime: endTimeString
-      ? new Date(`1970-01-01T${endTimeString}:00.000Z`)
-      : undefined,
+    date: interviewDate,
+    startTime:
+      startTimeString && interviewDate
+        ? new Date(
+            `${
+              interviewDate.toISOString().split("T")[0]
+            }T${startTimeString}:00.000Z`
+          )
+        : undefined,
+    endTime:
+      endTimeString && interviewDate
+        ? new Date(
+            `${
+              interviewDate.toISOString().split("T")[0]
+            }T${endTimeString}:00.000Z`
+          )
+        : undefined,
   };
 
   const parsedData = insertUserAvailabilitySchema.safeParse(dataToValidate);
@@ -136,6 +169,7 @@ export async function addAvailability(
     await db.insert(userAvailabilities).values({
       id: uuidv4(),
       userId: userId,
+      interviewDateId: interviewDateId || null,
       date: validatedData.date,
       startTime: validatedData.startTime,
       endTime: validatedData.endTime,

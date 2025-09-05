@@ -22,8 +22,8 @@ export async function isEmailWhitelisted(email: string): Promise<boolean> {
   }
 }
 
-// Function to safely get user role from session
-export function getUserRole(
+// Function to safely get user role from database
+export async function getUserRole(
   session: {
     user?: {
       id: string;
@@ -36,8 +36,23 @@ export function getUserRole(
       role?: string;
     };
   } | null
-): string {
-  return session?.user?.role || "member";
+): Promise<string> {
+  if (!session?.user?.id) {
+    return "member";
+  }
+
+  try {
+    const result = await db
+      .select({ role: user.role })
+      .from(user)
+      .where(eq(user.id, session.user.id))
+      .limit(1);
+
+    return result[0]?.role || "member";
+  } catch (error) {
+    console.error("Error fetching user role:", error);
+    return "member";
+  }
 }
 
 export const auth = betterAuth({
