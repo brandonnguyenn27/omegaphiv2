@@ -8,6 +8,7 @@ import {
   InterviewAssignmentExtended,
 } from "@/lib/types";
 import SchedulePopover from "@/components/interview-scheduler/SchedulePopover";
+import EmailDialog from "@/components/interview-scheduler/EmailDialog";
 import { deleteInterviewAssignment } from "@/app/(authenticated)/(admin)/admin/interview-scheduler/actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,6 +40,7 @@ const ScheduledCell: React.FC<ScheduledCellProps> = ({
   bgColor,
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
 
   const handleDelete = async () => {
     if (!existingAssignment) return;
@@ -58,80 +60,103 @@ const ScheduledCell: React.FC<ScheduledCellProps> = ({
   };
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <div
-          className={`border-b border-r border-gray-300 h-12 flex items-center justify-center text-xs transition-colors duration-200 ${bgColor} text-white cursor-pointer hover:bg-green-600`}
-          title={title}
-        >
-          {existingAssignment &&
-            existingAssignment.interviewer1 &&
-            existingAssignment.interviewer2 && (
-              <div className="text-center">
-                <div className="text-xs font-medium">
-                  {existingAssignment.interviewer1.name} &{" "}
-                  {existingAssignment.interviewer2.name}
+    <>
+      <Popover>
+        <PopoverTrigger asChild>
+          <div
+            className={`border-b border-r border-gray-300 h-12 flex items-center justify-center text-xs transition-colors duration-200 ${bgColor} text-white cursor-pointer hover:bg-green-600`}
+            title={title}
+          >
+            {existingAssignment &&
+              existingAssignment.interviewer1 &&
+              existingAssignment.interviewer2 && (
+                <div className="text-center">
+                  <div className="text-xs font-medium">
+                    {existingAssignment.interviewer1.name} &{" "}
+                    {existingAssignment.interviewer2.name}
+                  </div>
                 </div>
+              )}
+          </div>
+        </PopoverTrigger>
+        <PopoverContent
+          className="w-64 p-3"
+          align="center"
+          side="top"
+          sideOffset={5}
+          avoidCollisions={true}
+          collisionPadding={20}
+          sticky="always"
+        >
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-center">
+              Interview Assignment
+            </p>
+
+            {existingAssignment && (
+              <div className="text-xs text-center text-muted-foreground">
+                <p className="truncate">
+                  {existingAssignment.interviewer1?.name} &{" "}
+                  {existingAssignment.interviewer2?.name}
+                </p>
+                <p>
+                  {(() => {
+                    // Convert UTC time to local time for display
+                    const startTime = existingAssignment.startTime;
+                    const year = startTime.getUTCFullYear();
+                    const month = startTime.getUTCMonth();
+                    const day = startTime.getUTCDate();
+                    const hour = startTime.getUTCHours();
+                    const minute = startTime.getUTCMinutes();
+                    const localDate = new Date(year, month, day, hour, minute);
+                    return format(localDate, "MMM dd, h:mm a");
+                  })()}
+                </p>
               </div>
             )}
-        </div>
-      </PopoverTrigger>
-      <PopoverContent
-        className="w-56 p-2"
-        align="center"
-        side="top"
-        sideOffset={5}
-        avoidCollisions={true}
-        collisionPadding={20}
-        sticky="always"
-      >
-        <div className="space-y-1">
-          <p className="text-xs font-medium text-center">Remove assignment?</p>
 
-          {existingAssignment && (
-            <div className="text-xs text-center text-muted-foreground">
-              <p className="truncate">
-                {existingAssignment.interviewer1?.name} &{" "}
-                {existingAssignment.interviewer2?.name}
-              </p>
-              <p>
-                {(() => {
-                  // Convert UTC time to local time for display
-                  const startTime = existingAssignment.startTime;
-                  const year = startTime.getUTCFullYear();
-                  const month = startTime.getUTCMonth();
-                  const day = startTime.getUTCDate();
-                  const hour = startTime.getUTCHours();
-                  const minute = startTime.getUTCMinutes();
-                  const localDate = new Date(year, month, day, hour, minute);
-                  return format(localDate, "MMM dd, h:mm a");
-                })()}
-              </p>
+            <div className="space-y-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full h-7 text-xs"
+                onClick={() => setIsEmailDialogOpen(true)}
+              >
+                Generate Email Prompt
+              </Button>
+
+              <div className="flex gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 h-6 text-xs px-1"
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="flex-1 h-6 text-xs px-1"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "..." : "Remove"}
+                </Button>
+              </div>
             </div>
-          )}
-
-          <div className="flex gap-1 pt-1">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 h-6 text-xs px-1"
-              disabled={isDeleting}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="flex-1 h-6 text-xs px-1"
-              onClick={handleDelete}
-              disabled={isDeleting}
-            >
-              {isDeleting ? "..." : "Remove"}
-            </Button>
           </div>
-        </div>
-      </PopoverContent>
-    </Popover>
+        </PopoverContent>
+      </Popover>
+
+      {existingAssignment && (
+        <EmailDialog
+          isOpen={isEmailDialogOpen}
+          onClose={() => setIsEmailDialogOpen(false)}
+          assignment={existingAssignment}
+        />
+      )}
+    </>
   );
 };
 

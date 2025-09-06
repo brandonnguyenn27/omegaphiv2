@@ -12,7 +12,7 @@ import {
   CreateRusheeResponse,
 } from "@/lib/types";
 
-const PYTHON_API_URL = process.env.PYTHON_API_URL || "http://localhost:8000";
+const PYTHON_API_URL = process.env.PYTHON_API_URL;
 
 // PDF Parsing Server Action
 export async function parsePdfApplication(
