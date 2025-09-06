@@ -77,45 +77,49 @@ export default function AvailabilityForm({
     const errors: { startTime?: string; endTime?: string } = {};
 
     if (!selectedInterviewDate) {
+      setValidationErrors(errors);
       return errors;
     }
 
-    if (startTime && endTime) {
-      // Convert interview times to HH:MM format for comparison using UTC
-      const interviewStartTimeStr = new Date(
-        selectedInterviewDate.startTime
-      ).toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: "UTC", // Use UTC since database stores UTC times
-      });
-      const interviewEndTimeStr = new Date(
-        selectedInterviewDate.endTime
-      ).toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: "UTC", // Use UTC since database stores UTC times
-      });
+    // Convert interview times to HH:MM format for comparison using UTC
+    const interviewStartTimeStr = new Date(
+      selectedInterviewDate.startTime
+    ).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "UTC", // Use UTC since database stores UTC times
+    });
+    const interviewEndTimeStr = new Date(
+      selectedInterviewDate.endTime
+    ).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "UTC", // Use UTC since database stores UTC times
+    });
 
-      // Compare time strings directly
+    // Validate start time if provided
+    if (startTime) {
       if (startTime < interviewStartTimeStr) {
         errors.startTime = `Start time must be at or after ${formatTimeForDisplay(
           selectedInterviewDate.startTime
         )}`;
       }
+    }
 
+    // Validate end time if provided
+    if (endTime) {
       if (endTime > interviewEndTimeStr) {
         errors.endTime = `End time must be at or before ${formatTimeForDisplay(
           selectedInterviewDate.endTime
         )}`;
       }
+    }
 
-      // Check if start time is after end time
-      if (startTime >= endTime) {
-        errors.endTime = "End time must be after start time";
-      }
+    // Check if start time is after end time (only if both are provided)
+    if (startTime && endTime && startTime >= endTime) {
+      errors.endTime = "End time must be after start time";
     }
 
     setValidationErrors(errors);
@@ -125,16 +129,14 @@ export default function AvailabilityForm({
   // Handle time changes and validate
   const handleStartTimeChange = (value: string) => {
     setStartTime(value);
-    if (value && endTime) {
-      setTimeout(() => validateTimes(), 0);
-    }
+    // Always validate when start time changes
+    setTimeout(() => validateTimes(), 0);
   };
 
   const handleEndTimeChange = (value: string) => {
     setEndTime(value);
-    if (startTime && value) {
-      setTimeout(() => validateTimes(), 0);
-    }
+    // Always validate when end time changes
+    setTimeout(() => validateTimes(), 0);
   };
 
   // Handle form submission with validation

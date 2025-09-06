@@ -1,7 +1,8 @@
 import * as React from "react";
 import { AppSidebar } from "../../components/sidebar/app-sidebar";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarInset } from "@/components/ui/sidebar";
 import { DashboardHeader } from "@/components/sidebar/dashboard-header";
+import SidebarWrapper from "@/components/sidebar/sidebar-wrapper";
 import { redirect } from "next/navigation";
 import { auth, isEmailWhitelisted, getUserRole } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -53,12 +54,12 @@ export default async function AuthenticatedLayout({
   const isAdmin = userRole === "admin";
 
   return (
-    <SidebarProvider>
+    <SidebarWrapper>
       <AppSidebar user={user} isAdmin={isAdmin} />
       <SidebarInset>
         <DashboardHeader />
         <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
       </SidebarInset>
-    </SidebarProvider>
+    </SidebarWrapper>
   );
 }

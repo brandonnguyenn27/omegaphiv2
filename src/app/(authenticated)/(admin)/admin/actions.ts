@@ -50,7 +50,6 @@ export async function parsePdfApplication(
 
     // Call Python service
     console.log("Calling Python service for PDF parsing...");
-    console.log("Python API URL:", PYTHON_API_URL);
     const pythonResponse = await callPythonService(file);
     if (!pythonResponse.success) {
       return {

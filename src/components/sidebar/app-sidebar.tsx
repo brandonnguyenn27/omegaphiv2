@@ -51,18 +51,18 @@ const adminNavData = {
       url: "/admin",
       items: [
         {
-          title: "Users",
-          url: "/admin/users",
-          isActive: false,
-        },
-        {
           title: "Applications",
-          url: "/admin/rushee",
+          url: "/admin/rushee/applications",
           isActive: false,
         },
         {
-          title: "Availabilities",
+          title: "Rushee Availabilities",
           url: "/admin/rushee/availabilities",
+          isActive: false,
+        },
+        {
+          title: "User Availabilities",
+          url: "/admin/users/availabilities",
           isActive: false,
         },
         {

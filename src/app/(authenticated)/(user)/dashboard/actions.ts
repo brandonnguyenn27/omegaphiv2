@@ -2,8 +2,14 @@
 import { db } from "@/index";
 import { events } from "@/db/schema";
 
-import { eq } from "drizzle-orm";
-import { userAvailabilities, interviewDates } from "@/db/schema";
+import { eq, or } from "drizzle-orm";
+import {
+  userAvailabilities,
+  interviewDates,
+  interviewAssignments,
+  rushee,
+} from "@/db/schema";
+import { user } from "@/db/auth-schema";
 import { checkSession } from "@/lib/auth-server";
 import { v4 as uuidv4 } from "uuid";
 import { InferSelectModel } from "drizzle-orm";
@@ -67,6 +73,92 @@ export async function getInterviewDates(): Promise<InterviewDates[]> {
     return interviewDatesData;
   } catch (error) {
     console.error("Error fetching interview dates:", error);
+    return [];
+  }
+}
+
+export async function getUserInterviews() {
+  const session = await checkSession();
+  try {
+    const userId = session.user.id;
+
+    // Fetch interview assignments where the user is either interviewer1 or interviewer2
+    const userInterviews = await db
+      .select({
+        id: interviewAssignments.id,
+        rusheeId: interviewAssignments.rusheeId,
+        interviewDateId: interviewAssignments.interviewDateId,
+        startTime: interviewAssignments.startTime,
+        endTime: interviewAssignments.endTime,
+        interviewer1Id: interviewAssignments.interviewer1Id,
+        interviewer2Id: interviewAssignments.interviewer2Id,
+        createdAt: interviewAssignments.createdAt,
+        updatedAt: interviewAssignments.updatedAt,
+        rushee: {
+          id: rushee.id,
+          name: rushee.name,
+          email: rushee.email,
+          phoneNumber: rushee.phoneNumber,
+          major: rushee.major,
+        },
+        interviewer1: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        },
+        interviewDate: {
+          id: interviewDates.id,
+          date: interviewDates.date,
+        },
+      })
+      .from(interviewAssignments)
+      .leftJoin(rushee, eq(interviewAssignments.rusheeId, rushee.id))
+      .leftJoin(user, eq(interviewAssignments.interviewer1Id, user.id))
+      .leftJoin(
+        interviewDates,
+        eq(interviewAssignments.interviewDateId, interviewDates.id)
+      )
+      .where(
+        or(
+          eq(interviewAssignments.interviewer1Id, userId),
+          eq(interviewAssignments.interviewer2Id, userId)
+        )
+      )
+      .orderBy(interviewAssignments.startTime);
+
+    // Fetch interviewer2 data separately and merge
+    const interviewer2Data = await db
+      .select({
+        assignmentId: interviewAssignments.id,
+        interviewer2: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        },
+      })
+      .from(interviewAssignments)
+      .leftJoin(user, eq(interviewAssignments.interviewer2Id, user.id))
+      .where(
+        or(
+          eq(interviewAssignments.interviewer1Id, userId),
+          eq(interviewAssignments.interviewer2Id, userId)
+        )
+      );
+
+    // Merge interviewer2 data
+    const mergedInterviews = userInterviews.map((interview) => {
+      const interviewer2 = interviewer2Data.find(
+        (i2) => i2.assignmentId === interview.id
+      );
+      return {
+        ...interview,
+        interviewer2: interviewer2?.interviewer2 || null,
+      };
+    });
+
+    return mergedInterviews;
+  } catch (error) {
+    console.error("Error fetching user interviews:", error);
     return [];
   }
 }
