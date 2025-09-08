@@ -113,26 +113,6 @@ export default async function UserAvailabilitiesPage() {
                                   availability.interviewEndTime ||
                                   availability.endTime;
 
-                                // Debug logging for timestamp conversion
-                                console.log(
-                                  "Frontend user availability debug:",
-                                  {
-                                    id: availability.id,
-                                    rawDate: displayDate,
-                                    rawStartTime: displayStartTime,
-                                    rawEndTime: displayEndTime,
-                                    dateObj: displayDate
-                                      ? new Date(displayDate)
-                                      : null,
-                                    startTimeObj: displayStartTime
-                                      ? new Date(displayStartTime)
-                                      : null,
-                                    endTimeObj: displayEndTime
-                                      ? new Date(displayEndTime)
-                                      : null,
-                                  }
-                                );
-
                                 return (
                                   <div
                                     key={availability.id}
