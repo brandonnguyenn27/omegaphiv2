@@ -87,23 +87,6 @@ export default async function RusheeAvailabilitiesPage() {
                           ) : (
                             <div className="space-y-1">
                               {availabilities.map((availability) => {
-                                // Debug logging for timestamp conversion
-                                console.log("Frontend availability debug:", {
-                                  id: availability.id,
-                                  rawDate: availability.date,
-                                  rawStartTime: availability.startTime,
-                                  rawEndTime: availability.endTime,
-                                  dateObj: availability.date
-                                    ? new Date(availability.date)
-                                    : null,
-                                  startTimeObj: availability.startTime
-                                    ? new Date(availability.startTime)
-                                    : null,
-                                  endTimeObj: availability.endTime
-                                    ? new Date(availability.endTime)
-                                    : null,
-                                });
-
                                 return (
                                   <div
                                     key={availability.id}

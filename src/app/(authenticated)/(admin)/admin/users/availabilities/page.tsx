@@ -68,6 +68,9 @@ export default async function UserAvailabilitiesPage() {
                       Role
                     </th>
                     <th className="h-10 px-3 text-left align-middle font-medium text-muted-foreground">
+                      Interviews Scheduled
+                    </th>
+                    <th className="h-10 px-3 text-left align-middle font-medium text-muted-foreground">
                       Availabilities
                     </th>
                   </tr>
@@ -94,6 +97,17 @@ export default async function UserAvailabilitiesPage() {
                             }`}
                           >
                             {userData.role}
+                          </span>
+                        </td>
+                        <td className="p-2 align-middle text-sm text-muted-foreground">
+                          <span
+                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                              (userData.interviewCount || 0) >= 2
+                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                            }`}
+                          >
+                            {userData.interviewCount || 0}
                           </span>
                         </td>
                         <td className="p-2 align-middle text-sm">

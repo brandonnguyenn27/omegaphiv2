@@ -146,7 +146,11 @@ export default function SchedulePopover({
                         <label
                           htmlFor={`user-${ua.userId}`}
                           className={`text-sm ${
-                            isDisabled ? "text-gray-400" : "cursor-pointer"
+                            isDisabled
+                              ? "text-gray-400"
+                              : ua.user?.interviewCount === 2
+                              ? "text-green-600 font-medium cursor-pointer"
+                              : "cursor-pointer"
                           }`}
                         >
                           {ua.user?.name || ua.user?.email || "Unknown User"}

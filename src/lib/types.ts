@@ -118,6 +118,7 @@ export interface User {
   emailVerified: boolean;
   image: string | null;
   role: "member" | "admin";
+  interviewCount: number;
   createdAt: Date;
   updatedAt: Date;
 }

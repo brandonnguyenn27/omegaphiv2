@@ -1,6 +1,6 @@
 "use server";
 import { db } from "@/index";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import {
   interviewDates,
   rushee,
@@ -12,6 +12,43 @@ import { user } from "@/db/auth-schema";
 import { checkSession } from "@/lib/auth-server";
 import { v4 as uuidv4 } from "uuid";
 import { revalidatePath } from "next/cache";
+
+// Helper function to increment interview count for users
+async function incrementInterviewCount(userIds: string[]) {
+  const now = new Date();
+  for (const userId of userIds) {
+    await db
+      .update(user)
+      .set({
+        interviewCount: sql`${user.interviewCount} + 1`,
+        updatedAt: now,
+      })
+      .where(eq(user.id, userId));
+  }
+}
+
+// Helper function to decrement interview count for users (with validation)
+async function decrementInterviewCount(userIds: string[]) {
+  const now = new Date();
+  for (const userId of userIds) {
+    // First check current count to prevent negative values
+    const currentUser = await db
+      .select({ interviewCount: user.interviewCount })
+      .from(user)
+      .where(eq(user.id, userId))
+      .limit(1);
+
+    if (currentUser.length > 0 && currentUser[0].interviewCount > 0) {
+      await db
+        .update(user)
+        .set({
+          interviewCount: sql`${user.interviewCount} - 1`,
+          updatedAt: now,
+        })
+        .where(eq(user.id, userId));
+    }
+  }
+}
 
 // Fetch all data needed for the interview scheduler
 export async function getInterviewSchedulerData() {
@@ -70,6 +107,7 @@ export async function getInterviewSchedulerData() {
           emailVerified: user.emailVerified,
           image: user.image,
           role: user.role,
+          interviewCount: user.interviewCount,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
         },
@@ -106,6 +144,7 @@ export async function getInterviewSchedulerData() {
           emailVerified: user.emailVerified,
           image: user.image,
           role: user.role,
+          interviewCount: user.interviewCount,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
         },
@@ -125,6 +164,7 @@ export async function getInterviewSchedulerData() {
           emailVerified: user.emailVerified,
           image: user.image,
           role: user.role,
+          interviewCount: user.interviewCount,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
         },
@@ -198,6 +238,15 @@ export async function createInterviewAssignment(formData: FormData) {
     const assignmentId = uuidv4();
 
     if (existingAssignment.length > 0) {
+      // Get the old interviewers to decrement their counts
+      const oldInterviewers = [
+        existingAssignment[0].interviewer1Id,
+        existingAssignment[0].interviewer2Id,
+      ];
+
+      // Decrement count for old interviewers
+      await decrementInterviewCount(oldInterviewers);
+
       // Update existing assignment
       await db
         .update(interviewAssignments)
@@ -207,6 +256,9 @@ export async function createInterviewAssignment(formData: FormData) {
           updatedAt: now,
         })
         .where(eq(interviewAssignments.id, existingAssignment[0].id));
+
+      // Increment count for new interviewers
+      await incrementInterviewCount(selectedUsers);
     } else {
       // Create new assignment
       await db.insert(interviewAssignments).values({
@@ -220,6 +272,9 @@ export async function createInterviewAssignment(formData: FormData) {
         createdAt: now,
         updatedAt: now,
       });
+
+      // Increment count for new interviewers
+      await incrementInterviewCount(selectedUsers);
     }
 
     // Update rushee's interview_scheduled flag to true
@@ -251,9 +306,13 @@ export async function deleteInterviewAssignment(assignmentId: string) {
   try {
     await checkSession();
 
-    // Get the assignment to find the rusheeId before deleting
+    // Get the assignment to find the rusheeId and interviewers before deleting
     const assignment = await db
-      .select({ rusheeId: interviewAssignments.rusheeId })
+      .select({
+        rusheeId: interviewAssignments.rusheeId,
+        interviewer1Id: interviewAssignments.interviewer1Id,
+        interviewer2Id: interviewAssignments.interviewer2Id,
+      })
       .from(interviewAssignments)
       .where(eq(interviewAssignments.id, assignmentId))
       .limit(1);
@@ -263,6 +322,13 @@ export async function deleteInterviewAssignment(assignmentId: string) {
     }
 
     const rusheeId = assignment[0].rusheeId;
+    const interviewers = [
+      assignment[0].interviewer1Id,
+      assignment[0].interviewer2Id,
+    ];
+
+    // Decrement interview count for the interviewers
+    await decrementInterviewCount(interviewers);
 
     // Delete the assignment
     await db
