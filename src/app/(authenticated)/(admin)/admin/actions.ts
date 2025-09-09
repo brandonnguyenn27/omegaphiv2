@@ -14,7 +14,128 @@ import {
 
 const PYTHON_API_URL = process.env.PYTHON_API_URL;
 
-// PDF Parsing Server Action
+// PDF Parsing Server Action (Preview Only - No Database Creation)
+export async function parsePdfApplicationPreview(
+  prevState: ApiResponse<PythonApiResponse> | null,
+  formData: FormData
+): Promise<ApiResponse<PythonApiResponse>> {
+  try {
+    console.log("=== PDF PARSING PREVIEW SERVER ACTION STARTED ===");
+    console.log("Timestamp:", new Date().toISOString());
+
+    // Check session for authentication
+    await checkSession();
+    console.log("Authentication check passed");
+
+    // Get the file from form data
+    const file = formData.get("file") as File;
+    console.log("File received:", {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: new Date(file.lastModified).toISOString(),
+    });
+
+    // Validate file upload
+    const fileValidation = fileUploadSchema.safeParse({ file });
+    if (!fileValidation.success) {
+      console.log("File validation failed:", fileValidation.error.errors);
+      return {
+        success: false,
+        message: "File validation failed",
+        error: fileValidation.error.errors[0]?.message || "Invalid file",
+      };
+    }
+    console.log("File validation passed");
+
+    // Call Python service
+    console.log("Calling Python service for PDF parsing...");
+    const pythonResponse = await callPythonService(file);
+    if (!pythonResponse.success) {
+      return {
+        success: false,
+        message: "Failed to parse PDF",
+        error: pythonResponse.error,
+      };
+    }
+
+    // Validate Python response
+    const validationResult = pythonApiResponseSchema.safeParse(
+      pythonResponse.data
+    );
+    if (!validationResult.success) {
+      return {
+        success: false,
+        message: "Invalid data from Python service",
+        error: "Response validation failed",
+      };
+    }
+
+    const parsedData = validationResult.data;
+
+    // Log the parsed PDF data in its raw form
+    console.log("=== PDF PARSING RESULTS ===");
+    console.log(
+      "Raw parsed data from Python API:",
+      JSON.stringify(parsedData, null, 2)
+    );
+    console.log("Rushee data:", {
+      name: parsedData.rushee.name,
+      email: parsedData.rushee.email,
+      phoneNumber: parsedData.rushee.phoneNumber,
+      major: parsedData.rushee.major,
+    });
+    console.log("Availabilities count:", parsedData.availabilities.length);
+    console.log(
+      "Availabilities data:",
+      parsedData.availabilities.map((avail) => ({
+        date: avail.date,
+        startTime: avail.startTime,
+        endTime: avail.endTime,
+      }))
+    );
+    console.log("===========================");
+
+    // Check for duplicate email
+    const existingRushee = await db
+      .select()
+      .from(rushee)
+      .where(eq(rushee.email, parsedData.rushee.email))
+      .limit(1);
+
+    if (existingRushee.length > 0) {
+      return {
+        success: false,
+        message: "Rushee with this email already exists",
+        error: "Duplicate email",
+      };
+    }
+
+    console.log(
+      "=== PDF PARSING PREVIEW SERVER ACTION COMPLETED SUCCESSFULLY ==="
+    );
+    return {
+      success: true,
+      message:
+        "PDF parsed successfully. Please review and edit the data below.",
+      data: parsedData,
+    };
+  } catch (error) {
+    console.error("=== PDF PARSING PREVIEW SERVER ACTION FAILED ===");
+    console.error("Error in PDF parsing preview server action:", error);
+    console.error(
+      "Error stack:",
+      error instanceof Error ? error.stack : "No stack trace"
+    );
+    return {
+      success: false,
+      message: "Internal server error",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+// PDF Parsing Server Action (Legacy - Creates Database Records)
 export async function parsePdfApplication(
   prevState: ApiResponse<CreateRusheeResponse> | null,
   formData: FormData
@@ -359,4 +480,99 @@ async function createRusheeWithAvailabilities(
     rushee: createdRushee,
     availabilities: createdAvailabilities,
   };
+}
+
+// Save Edited Rushee Data Server Action
+export async function saveEditedRushee(
+  prevState: ApiResponse<CreateRusheeResponse> | null,
+  formData: FormData
+): Promise<ApiResponse<CreateRusheeResponse>> {
+  try {
+    console.log("=== SAVE EDITED RUSHEE SERVER ACTION STARTED ===");
+    console.log("Timestamp:", new Date().toISOString());
+
+    // Check session for authentication
+    await checkSession();
+    console.log("Authentication check passed");
+
+    // Parse form data
+    const rusheeData = {
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      phoneNumber: (formData.get("phoneNumber") as string) || null,
+      major: (formData.get("major") as string) || null,
+    };
+
+    const availabilitiesData = JSON.parse(
+      formData.get("availabilities") as string
+    );
+
+    console.log("Parsed form data:", {
+      rushee: rusheeData,
+      availabilitiesCount: availabilitiesData.length,
+    });
+
+    // Validate required fields
+    if (!rusheeData.name || !rusheeData.email) {
+      return {
+        success: false,
+        message: "Name and email are required",
+        error: "Missing required fields",
+      };
+    }
+
+    // Check for duplicate email
+    const existingRushee = await db
+      .select()
+      .from(rushee)
+      .where(eq(rushee.email, rusheeData.email))
+      .limit(1);
+
+    if (existingRushee.length > 0) {
+      return {
+        success: false,
+        message: "Rushee with this email already exists",
+        error: "Duplicate email",
+      };
+    }
+
+    // Create rushee and availabilities
+    console.log("Creating rushee with edited data...");
+    const result = await createRusheeWithAvailabilities({
+      rushee: {
+        name: rusheeData.name,
+        email: rusheeData.email,
+        phoneNumber: rusheeData.phoneNumber || undefined,
+        major: rusheeData.major || undefined,
+      },
+      availabilities: availabilitiesData,
+    });
+
+    console.log("Rushee creation completed successfully!");
+    console.log("Created rushee ID:", result.rushee.id);
+
+    // Revalidate the admin dashboard to show new data
+    revalidatePath("/admin/rushee");
+
+    console.log(
+      "=== SAVE EDITED RUSHEE SERVER ACTION COMPLETED SUCCESSFULLY ==="
+    );
+    return {
+      success: true,
+      message: "Rushee and availabilities created successfully",
+      data: result,
+    };
+  } catch (error) {
+    console.error("=== SAVE EDITED RUSHEE SERVER ACTION FAILED ===");
+    console.error("Error in save edited rushee server action:", error);
+    console.error(
+      "Error stack:",
+      error instanceof Error ? error.stack : "No stack trace"
+    );
+    return {
+      success: false,
+      message: "Internal server error",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
 }

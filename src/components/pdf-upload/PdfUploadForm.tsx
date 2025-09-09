@@ -13,13 +13,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, FileText, CheckCircle, XCircle, Loader2 } from "lucide-react";
-import { parsePdfApplication } from "@/app/(authenticated)/(admin)/admin/actions";
-import { ApiResponse, CreateRusheeResponse } from "@/lib/types";
+import { parsePdfApplicationPreview } from "@/app/(authenticated)/(admin)/admin/actions";
+import {
+  ApiResponse,
+  CreateRusheeResponse,
+  PythonApiResponse,
+} from "@/lib/types";
+import { RusheePreviewForm } from "./RusheePreviewForm";
 
 export function PdfUploadForm() {
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] =
     useState<ApiResponse<CreateRusheeResponse> | null>(null);
+  const [previewData, setPreviewData] = useState<PythonApiResponse | null>(
+    null
+  );
   const [isPending, startTransition] = useTransition();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,6 +35,7 @@ export function PdfUploadForm() {
     if (selectedFile) {
       setFile(selectedFile);
       setResult(null); // Clear previous results
+      setPreviewData(null); // Clear previous preview data
     }
   };
 
@@ -48,19 +57,46 @@ export function PdfUploadForm() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const result = await parsePdfApplication(null, formData);
-      setResult(result);
+      const result = await parsePdfApplicationPreview(null, formData);
 
-      if (result.success) {
+      if (result.success && result.data) {
+        setPreviewData(result.data);
         setFile(null);
         // Reset the file input
         const fileInput = document.getElementById(
           "pdf-file"
         ) as HTMLInputElement;
         if (fileInput) fileInput.value = "";
+      } else {
+        setResult({
+          success: false,
+          message: result.message,
+          error: result.error,
+        });
       }
     });
   };
+
+  const handlePreviewCancel = () => {
+    setPreviewData(null);
+    setResult(null);
+  };
+
+  const handlePreviewSuccess = (result: ApiResponse<CreateRusheeResponse>) => {
+    setResult(result);
+    setPreviewData(null);
+  };
+
+  // Show preview form if we have parsed data
+  if (previewData) {
+    return (
+      <RusheePreviewForm
+        parsedData={previewData}
+        onCancel={handlePreviewCancel}
+        onSuccess={handlePreviewSuccess}
+      />
+    );
+  }
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -70,8 +106,8 @@ export function PdfUploadForm() {
           PDF Application Parser
         </CardTitle>
         <CardDescription>
-          Upload a PDF application form to automatically create rushee records
-          and availabilities.
+          Upload a PDF application form to parse and review rushee data before
+          creating records.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -114,7 +150,7 @@ export function PdfUploadForm() {
             ) : (
               <>
                 <Upload className="mr-2 h-4 w-4" />
-                Upload and Parse
+                Upload and Preview
               </>
             )}
           </Button>
